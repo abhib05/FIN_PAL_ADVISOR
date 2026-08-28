@@ -389,12 +389,9 @@ let isBusy = false;
 let currentAudio = null;
 
 async function initSession() {
-  const stored = sessionStorage.getItem('session_id');
-  if (stored) { sessionId = stored; wireDashboardBtn(); return; }
   const r = await fetch(`${API}/api/sessions`, { method: 'POST' });
   const d = await r.json();
   sessionId = d.session_id;
-  sessionStorage.setItem('session_id', sessionId);
   wireDashboardBtn();
 }
 
