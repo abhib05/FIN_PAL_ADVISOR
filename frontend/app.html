@@ -426,6 +426,9 @@ function createStreamingBubble() {
   return row.querySelector('.bubble');
 }
 
+const _MEMORY_TAG_RE = /^\[Memory:[^\]]*\]\s*/i;
+function stripMemoryTag(text) { return text.replace(_MEMORY_TAG_RE, ''); }
+
 function appendToken(bubble, token) {
   const dots = bubble.querySelector('.typing-dots');
   if (dots) dots.remove();
@@ -478,6 +481,7 @@ async function sendToAPI(formData, isVoice) {
       const reader = r.body.getReader();
       const dec = new TextDecoder();
       let buf = '';
+      let firstToken = true;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -489,8 +493,12 @@ async function sendToAPI(formData, isVoice) {
           if (!part.startsWith('data: ')) continue;
           try {
             const ev = JSON.parse(part.slice(6));
-            if (ev.type === 'token') appendToken(advisorBubble, ev.text);
-            else if (ev.type === 'done') { updateProfile(ev.profile); setStatus('ready'); }
+            if (ev.type === 'token') {
+              // Strip any [Memory: ...] tag that leaks into the first token(s)
+              let tok = ev.text;
+              if (firstToken) { tok = stripMemoryTag(tok); firstToken = false; }
+              if (tok) appendToken(advisorBubble, tok);
+            } else if (ev.type === 'done') { updateProfile(ev.profile); setStatus('ready'); }
           } catch {}
         }
       }
@@ -505,7 +513,7 @@ async function sendToAPI(formData, isVoice) {
     }
     const d = await r.json();
     addBubble('user', d.user_text);
-    addBubble('advisor', d.advisor_text);
+    addBubble('advisor', stripMemoryTag(d.advisor_text));
     updateProfile(d.profile);
     if (d.audio_b64) await playAudio(d.audio_b64);
     else setStatus('ready');
