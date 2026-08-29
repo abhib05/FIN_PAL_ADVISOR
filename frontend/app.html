@@ -345,47 +345,151 @@
     });
   }
 
-  function stopAndSend() {
-    if (!recorder) return;
-    recording = false;
-    busy = true;
-    setState('processing');
+<script>
+const API = 'http://localhost:8000';
 
-    recorder.stop().then(function (result) {
-      recorder = null;
-      if (!result.blob || result.blob.size === 0) {
-        throw new Error('Nothing was recorded — please try again.');
-      }
-      return F.sendVoice(sessionId, result.blob, result.filename);
-    }).then(function (data) {
-      if (data.user_text)    addMessage('user', data.user_text);
-      if (data.advisor_text) addMessage('advisor', data.advisor_text);
-      if (data.profile)      renderProfile(data.profile);
+let sessionId = null;
+let mediaRecorder = null;
+let audioChunks = [];
+let isRecording = false;
+let isBusy = false;
+let currentAudio = null;
 
-      if (data.audio_b64) {
-        setState('speaking');
-        return F.playBase64Wav(data.audio_b64).then(function (played) {
-          if (!played) setState('ready', 'Ready — audio could not play, the reply is above');
-        });
+async function initSession() {
+  const r = await fetch(`${API}/api/sessions`, { method: 'POST' });
+  const d = await r.json();
+  sessionId = d.session_id;
+  wireDashboardBtn();
+}
+
+function wireDashboardBtn() {
+  const btn = document.getElementById('dashboard-btn');
+  if (!btn || !sessionId) return;
+  btn.href = `dashboard.html?session=${sessionId}`;
+  btn.style.display = 'flex';
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function addBubble(role, text) {
+  const row = document.createElement('div');
+  row.className = `bubble-row ${role}`;
+  row.innerHTML = `
+    <div class="avatar ${role}">${role === 'user' ? 'U' : 'FP'}</div>
+    <div class="bubble">${escHtml(text)}</div>
+  `;
+  document.getElementById('transcript').appendChild(row);
+  row.scrollIntoView({ behavior: 'smooth', block: 'end' });
+}
+
+function createStreamingBubble() {
+  const row = document.createElement('div');
+  row.className = 'bubble-row advisor';
+  row.innerHTML = `<div class="avatar advisor">FP</div><div class="bubble"><span class="typing-dots">···</span></div>`;
+  document.getElementById('transcript').appendChild(row);
+  row.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  return row.querySelector('.bubble');
+}
+
+const _MEMORY_TAG_RE = /^\[Memory:[^\]]*\]\s*/i;
+function stripMemoryTag(text) { return text.replace(_MEMORY_TAG_RE, ''); }
+
+function appendToken(bubble, token) {
+  const dots = bubble.querySelector('.typing-dots');
+  if (dots) dots.remove();
+  bubble.textContent += token;
+  bubble.closest('.bubble-row').scrollIntoView({ behavior: 'smooth', block: 'end' });
+}
+
+function setStatus(state) {
+  const btn = document.getElementById('mic-btn');
+  const lbl = document.getElementById('status-label');
+  btn.className = '';
+  if (state === 'recording')  { btn.classList.add('recording');  lbl.textContent = 'recording…'; }
+  else if (state === 'processing') { btn.classList.add('processing'); lbl.textContent = 'thinking…'; }
+  else if (state === 'speaking')   { btn.classList.add('speaking');   lbl.textContent = 'speaking…'; }
+  else { lbl.textContent = 'ready'; }
+}
+
+function playAudio(b64) {
+  return new Promise(resolve => {
+    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    const blob = new Blob([bytes], { type: 'audio/wav' });
+    const url = URL.createObjectURL(blob);
+    currentAudio = new Audio(url);
+    setStatus('speaking');
+    currentAudio.onended = () => { URL.revokeObjectURL(url); setStatus('ready'); resolve(); };
+    currentAudio.onerror  = () => { URL.revokeObjectURL(url); setStatus('ready'); resolve(); };
+    currentAudio.play().catch(() => { setStatus('ready'); resolve(); });
+  });
+}
+
+async function sendToAPI(formData, isVoice) {
+  if (isBusy) return;
+  isBusy = true;
+  setStatus('processing');
+
+  try {
+    if (!isVoice) {
+      addBubble('user', formData);
+      const advisorBubble = createStreamingBubble();
+
+      const r = await fetch(`${API}/api/sessions/${sessionId}/chat/stream`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: formData }),
+      });
+
+      if (!r.ok) { advisorBubble.textContent = `⚠ Error ${r.status}`; return; }
+
+      const reader = r.body.getReader();
+      const dec = new TextDecoder();
+      let buf = '';
+      let firstToken = true;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        const parts = buf.split('\n\n');
+        buf = parts.pop();
+        for (const part of parts) {
+          if (!part.startsWith('data: ')) continue;
+          try {
+            const ev = JSON.parse(part.slice(6));
+            if (ev.type === 'token') {
+              // Strip any [Memory: ...] tag that leaks into the first token(s)
+              let tok = ev.text;
+              if (firstToken) { tok = stripMemoryTag(tok); firstToken = false; }
+              if (tok) appendToken(advisorBubble, tok);
+            } else if (ev.type === 'done') { updateProfile(ev.profile); setStatus('ready'); }
+          } catch {}
+        }
       }
-    }).catch(function (err) {
-      addMessage('error', (err && err.message) || 'That recording could not be processed.');
-      setState('error', 'Something went wrong — try again or type your message');
-    }).then(function () {
-      recorder  = null;
-      recording = false;
-      busy = false;
-      if (statusEl.dataset.tone !== 'error' && !/audio could not play/.test(statusEl.textContent)) {
-        setState('ready');
-      } else {
-        // keep the explanatory message, but re-enable the controls
-        input.disabled = false; sendBtn.disabled = false;
-        micBtn.disabled = !F.micSupported();
-        micBtn.dataset.state = 'idle';
-        Array.prototype.forEach.call(suggestions.querySelectorAll('.chip'), function (c) { c.disabled = false; });
-      }
-      scrollToEnd();
-    });
+      return;
+    }
+
+    const r = await fetch(`${API}/api/sessions/${sessionId}/voice`, { method: 'POST', body: formData });
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      addBubble('advisor', `⚠ Error: ${err.detail || r.statusText}`);
+      return;
+    }
+    const d = await r.json();
+    addBubble('user', d.user_text);
+    addBubble('advisor', stripMemoryTag(d.advisor_text));
+    updateProfile(d.profile);
+    if (d.audio_b64) await playAudio(d.audio_b64);
+    else setStatus('ready');
+
+  } catch (e) {
+    addBubble('advisor', '⚠ Could not reach the server. Is the backend running?');
+    setStatus('ready');
+  } finally {
+    isBusy = false;
   }
 
   /* ---------------- boot ---------------- */

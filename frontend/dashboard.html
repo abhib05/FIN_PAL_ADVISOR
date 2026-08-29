@@ -103,20 +103,41 @@
 
 <script src="api.js"></script>
 <script>
-(function () {
-  'use strict';
-  var F = window.FinPal;
-  var INR = F.inr, PCT = F.pct, clamp = F.clamp;
+/* ─────────────────────────────────────────────
+   UTILITIES
+───────────────────────────────────────────── */
+const INR = n => n == null || isNaN(n) ? '—' : '₹' + Math.round(n).toLocaleString('en-IN');
+const PCT = (a, b) => b > 0 ? Math.round(a / b * 100) : 0;
+const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
+const qs = s => document.querySelector(s);
 
-  var statusBox = document.getElementById('page-status');
-  var dash      = document.getElementById('dashboard');
+function getSessionId() {
+  const p = new URLSearchParams(location.search);
+  return p.get('session') || p.get('sid');
+}
 
-  /* ---------------- small DOM helpers ---------------- */
-  function el(tag, className, text) {
-    var n = document.createElement(tag);
-    if (className) n.className = className;
-    if (text != null) n.textContent = text;
-    return n;
+/* ─────────────────────────────────────────────
+   FETCH PROFILE
+───────────────────────────────────────────── */
+async function loadProfile() {
+  const sid = getSessionId();
+
+  // Wire back button
+  qs('#back-btn').href = sid ? `app.html?session=${sid}` : 'app.html';
+
+  if (!sid) {
+    showNoSession();
+    return;
+  }
+
+  let profile;
+  try {
+    const res = await fetch(`http://localhost:8000/api/sessions/${sid}/profile`);
+    if (!res.ok) throw new Error('Not found');
+    profile = await res.json();
+  } catch {
+    showNoSession();
+    return;
   }
   function metric(label, value, note, tone) {
     var box = el('div', 'metric');
