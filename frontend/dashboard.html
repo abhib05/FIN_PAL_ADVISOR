@@ -1,651 +1,107 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FinPal — Financial Snapshot</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg:        #090C07;
-      --surface:   #111509;
-      --surface2:  #182212;
-      --surface3:  #1e2a14;
-      --border:    rgba(138,155,115,0.15);
-      --border2:   rgba(138,155,115,0.08);
-      --accent:    #F97316;
-      --accent-d:  rgba(249,115,22,0.12);
-      --green:     #4ADE80;
-      --green-d:   rgba(74,222,128,0.12);
-      --blue:      #38BDF8;
-      --blue-d:    rgba(56,189,248,0.12);
-      --red:       #EF4444;
-      --red-d:     rgba(239,68,68,0.12);
-      --amber:     #F59E0B;
-      --amber-d:   rgba(245,158,11,0.12);
-      --text:      #EFF3EA;
-      --muted:     #7A876A;
-      --muted2:    #4a5a3a;
-      --fd: 'Syne', system-ui, sans-serif;
-      --fb: 'Plus Jakarta Sans', system-ui, sans-serif;
-    }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--fb);
-      min-height: 100vh;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    /* ─── HEADER ─── */
-    header {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 0 28px;
-      height: 56px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      position: sticky;
-      top: 0;
-      z-index: 50;
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      text-decoration: none;
-    }
-    .logo-bars {
-      display: flex;
-      align-items: flex-end;
-      gap: 2px;
-      height: 18px;
-    }
-    .logo-bars span {
-      display: block;
-      width: 3px;
-      border-radius: 2px;
-      background: var(--accent);
-    }
-    .logo-bars span:nth-child(1) { height: 8px; }
-    .logo-bars span:nth-child(2) { height: 14px; }
-    .logo-bars span:nth-child(3) { height: 18px; }
-    .logo-bars span:nth-child(4) { height: 11px; }
-    .logo-bars span:nth-child(5) { height: 6px; }
-    .logo-name { font-family: var(--fd); font-size: 1rem; font-weight: 700; color: var(--text); }
-
-    .header-title {
-      font-family: var(--fd);
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: var(--muted);
-      margin-left: 4px;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
-
-    .header-right {
-      margin-left: auto;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .phase-pill {
-      font-size: 0.7rem;
-      font-weight: 600;
-      padding: 3px 12px;
-      border-radius: 999px;
-      background: var(--green-d);
-      color: var(--green);
-      letter-spacing: 0.04em;
-      text-transform: capitalize;
-    }
-
-    .btn-back {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      text-decoration: none;
-      color: var(--muted);
-      font-size: 0.8rem;
-      font-weight: 600;
-      font-family: var(--fd);
-      padding: 6px 14px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      transition: color .2s, border-color .2s;
-      letter-spacing: 0.02em;
-    }
-    .btn-back:hover { color: var(--text); border-color: rgba(138,155,115,0.35); }
-
-    /* ─── MAIN CONTENT ─── */
-    .page {
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 28px 24px 48px;
-    }
-
-    /* ─── STAT TILES ─── */
-    .stat-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 14px;
-      margin-bottom: 20px;
-    }
-
-    .stat-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 20px 22px;
-      position: relative;
-      overflow: hidden;
-    }
-    .stat-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-    }
-    .stat-card.orange::before { background: linear-gradient(90deg, var(--accent), transparent); }
-    .stat-card.green::before  { background: linear-gradient(90deg, var(--green),  transparent); }
-    .stat-card.blue::before   { background: linear-gradient(90deg, var(--blue),   transparent); }
-    .stat-card.red::before    { background: linear-gradient(90deg, var(--red),    transparent); }
-    .stat-card.amber::before  { background: linear-gradient(90deg, var(--amber),  transparent); }
-
-    .stat-label {
-      font-size: 0.7rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: var(--muted);
-      margin-bottom: 10px;
-    }
-    .stat-value {
-      font-family: var(--fd);
-      font-size: 1.8rem;
-      font-weight: 700;
-      line-height: 1;
-      margin-bottom: 8px;
-    }
-    .stat-value.orange { color: var(--accent); }
-    .stat-value.green  { color: var(--green); }
-    .stat-value.blue   { color: var(--blue); }
-    .stat-value.red    { color: var(--red); }
-    .stat-value.white  { color: var(--text); }
-    .stat-sub {
-      font-size: 0.75rem;
-      color: var(--muted);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .badge {
-      font-size: 0.65rem;
-      font-weight: 700;
-      padding: 2px 8px;
-      border-radius: 999px;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
-    .badge.green  { background: var(--green-d); color: var(--green); }
-    .badge.red    { background: var(--red-d);   color: var(--red); }
-    .badge.amber  { background: var(--amber-d); color: var(--amber); }
-    .badge.blue   { background: var(--blue-d);  color: var(--blue); }
-    .badge.orange { background: var(--accent-d); color: var(--accent); }
-
-    /* ─── MAIN GRID ─── */
-    .main-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 14px;
-      margin-bottom: 14px;
-    }
-
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 22px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .card-title {
-      font-family: var(--fd);
-      font-size: 0.82rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: var(--muted);
-    }
-
-    /* ─── 50-30-20 BAR CHART ─── */
-    .budget-bar-group {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .bbar-row {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .bbar-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .bbar-label {
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--text);
-    }
-    .bbar-nums {
-      font-size: 0.75rem;
-      color: var(--muted);
-      font-variant-numeric: tabular-nums;
-    }
-    .bbar-track {
-      height: 8px;
-      background: var(--surface2);
-      border-radius: 99px;
-      overflow: hidden;
-      position: relative;
-    }
-    .bbar-fill {
-      height: 100%;
-      border-radius: 99px;
-      transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .bbar-target-line {
-      position: absolute;
-      top: 0;
-      height: 100%;
-      width: 2px;
-      background: rgba(255,255,255,0.2);
-    }
-    .bbar-status {
-      font-size: 0.7rem;
-      color: var(--muted);
-    }
-
-    .surplus-box {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .surplus-label { font-size: 0.78rem; color: var(--muted); }
-    .surplus-value {
-      font-family: var(--fd);
-      font-size: 1.2rem;
-      font-weight: 700;
-    }
-
-    /* ─── EXPENSE BREAKDOWN ─── */
-    .expense-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .exp-row {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-    .exp-row-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .exp-icon-label {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .exp-icon {
-      width: 26px;
-      height: 26px;
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.8rem;
-      flex-shrink: 0;
-    }
-    .exp-name { font-size: 0.8rem; font-weight: 500; color: var(--text); }
-    .exp-amount {
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--text);
-      font-variant-numeric: tabular-nums;
-    }
-    .exp-pct {
-      font-size: 0.7rem;
-      color: var(--muted);
-      margin-left: 4px;
-    }
-    .exp-track {
-      height: 5px;
-      background: var(--surface2);
-      border-radius: 99px;
-      overflow: hidden;
-    }
-    .exp-fill {
-      height: 100%;
-      border-radius: 99px;
-      transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    /* ─── PRIORITY STACK ─── */
-    .priority-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .priority-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      padding: 12px 14px;
-      background: var(--surface2);
-      border-radius: 10px;
-      border: 1px solid var(--border2);
-    }
-    .priority-rank {
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.7rem;
-      font-weight: 700;
-      font-family: var(--fd);
-      flex-shrink: 0;
-      margin-top: 1px;
-    }
-    .priority-body { flex: 1; min-width: 0; }
-    .priority-action {
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--text);
-      margin-bottom: 3px;
-      line-height: 1.3;
-    }
-    .priority-reason {
-      font-size: 0.72rem;
-      color: var(--muted);
-      line-height: 1.4;
-    }
-
-    .bnpl-risk-banner {
-      padding: 12px 14px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .bnpl-risk-dot {
-      width: 10px; height: 10px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-    .bnpl-risk-text { font-size: 0.78rem; font-weight: 600; }
-    .bnpl-risk-sub  { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
-
-    /* ─── BOTTOM GRID ─── */
-    .bottom-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-    }
-
-    /* ─── PROJECTION CHART ─── */
-    .proj-canvas-wrap {
-      position: relative;
-      height: 160px;
-    }
-    canvas.proj-chart {
-      width: 100%;
-      height: 100%;
-    }
-    .proj-summary {
-      display: flex;
-      gap: 20px;
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px solid var(--border);
-    }
-    .proj-stat { flex: 1; }
-    .proj-stat-label { font-size: 0.7rem; color: var(--muted); margin-bottom: 4px; }
-    .proj-stat-value {
-      font-family: var(--fd);
-      font-size: 1.1rem;
-      font-weight: 700;
-    }
-
-    /* ─── RECOMMENDATIONS ─── */
-    .rec-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .rec-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      padding: 11px 13px;
-      background: var(--surface2);
-      border-radius: 10px;
-      border-left: 3px solid transparent;
-    }
-    .rec-item.critical { border-color: var(--red); }
-    .rec-item.warning  { border-color: var(--amber); }
-    .rec-item.good     { border-color: var(--green); }
-    .rec-item.info     { border-color: var(--blue); }
-    .rec-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
-    .rec-text { font-size: 0.78rem; color: var(--text); line-height: 1.45; }
-    .rec-text strong { color: var(--text); font-weight: 600; }
-
-    /* ─── EMPTY STATE ─── */
-    .empty-state {
-      text-align: center;
-      padding: 40px 20px;
-      color: var(--muted);
-    }
-    .empty-state-icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.5; }
-    .empty-state-title { font-family: var(--fd); font-size: 1rem; color: var(--text); margin-bottom: 6px; }
-    .empty-state-body  { font-size: 0.82rem; }
-
-    /* ─── LOADING SKELETON ─── */
-    .skeleton {
-      background: linear-gradient(90deg, var(--surface2) 0%, var(--surface3) 50%, var(--surface2) 100%);
-      background-size: 200% 100%;
-      animation: shimmer 1.4s infinite;
-      border-radius: 6px;
-    }
-    @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
-
-    /* ─── DISCLAIMER ─── */
-    .disclaimer {
-      text-align: center;
-      font-size: 0.68rem;
-      color: var(--muted2);
-      margin-top: 28px;
-      padding-top: 20px;
-      border-top: 1px solid var(--border2);
-    }
-
-    /* ─── RESPONSIVE ─── */
-    @media (max-width: 900px) {
-      .stat-grid { grid-template-columns: repeat(2, 1fr); }
-      .main-grid { grid-template-columns: 1fr; }
-      .bottom-grid { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 480px) {
-      .stat-grid { grid-template-columns: 1fr 1fr; }
-      .page { padding: 16px 14px 40px; }
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FinPal — financial dashboard</title>
+<meta name="description" content="Your monthly snapshot, expenses, emergency fund, debt, goals and projections — derived from your FinPal conversation.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-<!-- ─── HEADER ─── -->
-<header>
-  <a href="index.html" class="logo">
-    <div class="logo-bars">
-      <span></span><span></span><span></span><span></span><span></span>
-    </div>
-    <span class="logo-name">FinPal</span>
-  </a>
-  <span class="header-title">/ Financial Snapshot</span>
-  <div class="header-right">
-    <span class="phase-pill" id="phase-pill">—</span>
-    <a href="#" class="btn-back" id="back-btn">← Back to Chat</a>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">Fin<span>Pal</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a class="btn small secondary" id="home-link" href="index.html">Home</a>
+      <a class="btn small" id="advisor-link" href="app.html">Back to the advisor</a>
+    </nav>
   </div>
 </header>
 
-<!-- ─── PAGE ─── -->
-<div class="page">
+<main class="section">
+  <div class="wrap stack">
 
-  <!-- STAT TILES -->
-  <div class="stat-grid" id="stat-grid">
-    <div class="stat-card orange">
-      <div class="stat-label">Monthly Income</div>
-      <div class="stat-value orange" id="stat-income">—</div>
-      <div class="stat-sub" id="stat-income-sub">Loading...</div>
+    <span class="eyebrow" id="phase-badge">Loading</span>
+    <h1>Your monthly snapshot</h1>
+    <p class="lede" id="page-lede">Reading the profile from your conversation…</p>
+
+    <!-- Status / no-session notice -->
+    <div id="page-status" class="notice" role="status" aria-live="polite">
+      <p class="empty">Loading your dashboard…</p>
     </div>
-    <div class="stat-card blue">
-      <div class="stat-label">Total Expenses</div>
-      <div class="stat-value blue" id="stat-expenses">—</div>
-      <div class="stat-sub" id="stat-expenses-sub">Loading...</div>
+
+    <!-- Everything below is filled in by script -->
+    <div id="dashboard" class="stack hidden" style="width:100%">
+
+      <section class="snapshot" aria-labelledby="snapshot-title">
+        <h2 id="snapshot-title" class="small"
+            style="font-family:'Manrope',sans-serif;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-muted);font-size:12px;">
+          This month
+        </h2>
+        <div class="snapshot-grid mt" id="snapshot-grid"></div>
+      </section>
+
+      <section class="card" style="width:100%" aria-labelledby="budget-title">
+        <h2 id="budget-title">Budget split</h2>
+        <p class="small muted">Guideline: 50% needs · 30% wants · 20% saved or repaid.</p>
+        <div class="mt" id="budget-bars"></div>
+      </section>
+
+      <div class="bento two" style="width:100%">
+        <section class="card" aria-labelledby="expenses-title">
+          <h2 id="expenses-title">Where it goes</h2>
+          <div class="mt" id="expense-columns"></div>
+          <div class="rows mt" id="expense-rows"></div>
+        </section>
+
+        <section class="card" aria-labelledby="ef-title">
+          <h2 id="ef-title">Emergency fund</h2>
+          <div class="mt" id="ef-body"></div>
+        </section>
+      </div>
+
+      <div class="bento two" style="width:100%">
+        <section class="card" aria-labelledby="debt-title">
+          <h2 id="debt-title">Debt &amp; credit</h2>
+          <div class="mt" id="debt-body"></div>
+        </section>
+
+        <section class="card" aria-labelledby="goals-title">
+          <h2 id="goals-title">Goals</h2>
+          <div class="mt" id="goals-body"></div>
+        </section>
+      </div>
+
+      <section class="card" style="width:100%" aria-labelledby="projection-title">
+        <h2 id="projection-title">If you invest the surplus</h2>
+        <div class="mt" id="projection-body"></div>
+      </section>
+
+      <section class="card" style="width:100%" aria-labelledby="recs-title">
+        <h2 id="recs-title">What to do next</h2>
+        <ul class="tips mt" id="recommendations"></ul>
+      </section>
+
+      <div class="btn-row">
+        <a class="btn" id="continue-link" href="app.html">Continue the conversation</a>
+      </div>
     </div>
-    <div class="stat-card green">
-      <div class="stat-label">Monthly Surplus</div>
-      <div class="stat-value green" id="stat-surplus">—</div>
-      <div class="stat-sub" id="stat-surplus-sub">Loading...</div>
-    </div>
-    <div class="stat-card blue">
-      <div class="stat-label">Emergency Fund</div>
-      <div class="stat-value white" id="stat-ef">—</div>
-      <div class="stat-sub" id="stat-ef-sub">Loading...</div>
-    </div>
+
+    <p class="small muted lede">
+      Figures are derived from what you told FinPal. They are educational estimates, not licensed financial advice.
+    </p>
   </div>
+</main>
 
-  <!-- MAIN GRID -->
-  <div class="main-grid">
+<footer class="site-footer">
+  <div class="wrap"><p class="small">FinPal · Deterministic calculations, plain answers</p></div>
+</footer>
 
-    <!-- 50-30-20 Budget -->
-    <div class="card">
-      <div class="card-title">50 · 30 · 20 Budget</div>
-      <div class="budget-bar-group" id="budget-bars">
-        <div class="empty-state" style="padding:20px 0">
-          <div class="skeleton" style="height:12px;width:80%;margin:0 auto 12px"></div>
-          <div class="skeleton" style="height:8px;width:100%;margin-bottom:16px"></div>
-          <div class="skeleton" style="height:12px;width:80%;margin:0 auto 12px"></div>
-          <div class="skeleton" style="height:8px;width:100%;margin-bottom:16px"></div>
-          <div class="skeleton" style="height:12px;width:80%;margin:0 auto 12px"></div>
-          <div class="skeleton" style="height:8px;width:100%"></div>
-        </div>
-      </div>
-      <div class="surplus-box">
-        <span class="surplus-label">Unallocated Surplus</span>
-        <span class="surplus-value green" id="surplus-val">—</span>
-      </div>
-    </div>
-
-    <!-- Expense Breakdown -->
-    <div class="card">
-      <div class="card-title">Expense Breakdown</div>
-      <div class="expense-list" id="expense-list">
-        <div class="empty-state">
-          <div class="skeleton" style="height:40px;border-radius:10px;margin-bottom:10px"></div>
-          <div class="skeleton" style="height:40px;border-radius:10px;margin-bottom:10px"></div>
-          <div class="skeleton" style="height:40px;border-radius:10px;margin-bottom:10px"></div>
-          <div class="skeleton" style="height:40px;border-radius:10px"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Priority Actions -->
-    <div class="card">
-      <div class="card-title">Priority Actions</div>
-
-      <!-- BNPL Risk Banner -->
-      <div id="bnpl-banner" hidden></div>
-
-      <!-- Priority Stack -->
-      <div class="priority-list" id="priority-list">
-        <div class="skeleton" style="height:60px;border-radius:10px;margin-bottom:6px"></div>
-        <div class="skeleton" style="height:60px;border-radius:10px;margin-bottom:6px"></div>
-        <div class="skeleton" style="height:60px;border-radius:10px"></div>
-      </div>
-    </div>
-
-  </div><!-- /main-grid -->
-
-  <!-- BOTTOM GRID -->
-  <div class="bottom-grid">
-
-    <!-- Savings Projection -->
-    <div class="card">
-      <div class="card-title">Savings Projection to Graduation</div>
-      <div class="proj-canvas-wrap">
-        <canvas id="proj-canvas"></canvas>
-      </div>
-      <div class="proj-summary" id="proj-summary">
-        <div class="proj-stat">
-          <div class="proj-stat-label">Starting Monthly SIP</div>
-          <div class="proj-stat-value green" id="proj-sip">—</div>
-        </div>
-        <div class="proj-stat">
-          <div class="proj-stat-label">By Graduation</div>
-          <div class="proj-stat-value orange" id="proj-corpus">—</div>
-        </div>
-        <div class="proj-stat">
-          <div class="proj-stat-label">Assumed Return</div>
-          <div class="proj-stat-value white">12% p.a.</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Key Recommendations -->
-    <div class="card">
-      <div class="card-title">Key Recommendations</div>
-      <div class="rec-list" id="rec-list">
-        <div class="skeleton" style="height:50px;border-radius:10px;margin-bottom:8px"></div>
-        <div class="skeleton" style="height:50px;border-radius:10px;margin-bottom:8px"></div>
-        <div class="skeleton" style="height:50px;border-radius:10px;margin-bottom:8px"></div>
-        <div class="skeleton" style="height:50px;border-radius:10px"></div>
-      </div>
-    </div>
-
-  </div><!-- /bottom-grid -->
-
-  <div class="disclaimer">
-    All figures are estimates based on information shared during your conversation. This is educational guidance — not personalised financial advice.
-    Returns shown (12% p.a.) are historical index fund averages and are not guaranteed. · FinPal
-  </div>
-
-</div><!-- /page -->
-
+<script src="api.js"></script>
 <script>
 /* ─────────────────────────────────────────────
    UTILITIES
@@ -683,483 +139,497 @@ async function loadProfile() {
     showNoSession();
     return;
   }
-
-  render(profile);
-}
-
-function showNoSession() {
-  document.getElementById('stat-grid').innerHTML = `
-    <div class="empty-state" style="grid-column:1/-1;padding:40px">
-      <div class="empty-state-icon">💬</div>
-      <div class="empty-state-title">No conversation found</div>
-      <div class="empty-state-body">Start a conversation with FinPal first, then come back here to see your snapshot.</div>
-    </div>`;
-}
-
-/* ─────────────────────────────────────────────
-   DERIVE NUMBERS FROM PROFILE
-───────────────────────────────────────────── */
-function derive(p) {
-  const mi = p.money_in || {};
-  const ex = p.expenses || {};
-  const sn = p.safety_net || {};
-  const bnpl = ex.bnpl_usage || {};
-  const acad = p.academic || {};
-
-  const income  = mi.family_support_amount || 0;
-  const housing = ex.housing?.amount || 0;
-  const commute = ex.commute?.amount || 0;
-  const food    = Number(ex.food_beyond_mess) || 0;
-  const discr   = Number(ex.discretionary)    || 0;
-  const bnplAmt = Number(bnpl.typical_monthly_amount) || 0;
-
-  const subsRaw = ex.subscriptions;
-  const subsAmt = Array.isArray(subsRaw)
-    ? subsRaw.reduce((a, s) => a + (s.monthly_cost || 0), 0)
-    : (Number(subsRaw) || 0);
-
-  const needs  = housing + commute + food;
-  const wants  = subsAmt + discr + bnplAmt;
-  const totalEx = needs + wants;
-  const surplus = income - totalEx;
-
-  // 50-30-20 targets
-  const tNeeds   = income * 0.5;
-  const tWants   = income * 0.3;
-  const tSavings = income * 0.2;
-  const actualSavings = Math.max(0, surplus);
-
-  // Emergency fund
-  const savings   = Number(sn.personal_savings_amount) || 0;
-  const essentials = needs > 0 ? needs : (income * 0.5);
-  const efMonths   = essentials > 0 ? savings / essentials : 0;
-  const stability  = mi.income_stability || '';
-  const efTarget   = stability.includes('gig') ? 12 : stability.includes('fixed') ? 3 : 6;
-
-  // BNPL risk
-  const apps = Array.isArray(bnpl.apps_used) ? bnpl.apps_used : [];
-  const missed = !!bnpl.missed_or_min_only;
-  let bnplScore = 0;
-  if (missed) bnplScore += 2;
-  if (apps.length >= 2) bnplScore += 1;
-  if (income > 0 && bnplAmt / income > 0.15) bnplScore += 1;
-  const bnplRisk = ['low','moderate','high','critical'][Math.min(bnplScore, 3)];
-
-  // Debt info
-  const debts = Array.isArray(p.debt) ? p.debt : [];
-  const highInterestDebt = debts.find(d => (d.apr || 0) > 15);
-
-  // Graduation timeline
-  const gradYear = acad.expected_graduation_year || (new Date().getFullYear() + 2);
-  const monthsToGrad = Math.max(1, (gradYear - new Date().getFullYear()) * 12 - new Date().getMonth());
-  const sipAmount = Math.max(0, Math.round(surplus * 0.5));
-
-  // SIP projection (12% p.a. = 1% per month)
-  const r = 0.01;
-  const corpus = sipAmount > 0
-    ? Math.round(sipAmount * ((Math.pow(1 + r, monthsToGrad) - 1) / r) * (1 + r))
-    : 0;
-
-  // Health insurance
-  const hasInsurance = !!(sn.health_insurance_cover && sn.health_insurance_cover !== 'none');
-
-  return {
-    income, housing, commute, food, discr, bnplAmt, subsAmt,
-    needs, wants, totalEx, surplus, actualSavings,
-    tNeeds, tWants, tSavings,
-    savings, efMonths, efTarget, essentials,
-    apps, missed, bnplRisk, bnplScore,
-    highInterestDebt, debts,
-    gradYear, monthsToGrad, sipAmount, corpus, r,
-    hasInsurance,
-    phase: p.conversation_phase || 'rapport',
-  };
-}
-
-/* ─────────────────────────────────────────────
-   RENDER
-───────────────────────────────────────────── */
-function render(profile) {
-  const d = derive(profile);
-
-  // Phase pill
-  qs('#phase-pill').textContent = d.phase.replace(/_/g,' ');
-
-  renderStats(d);
-  renderBudget(d);
-  renderExpenses(d, profile);
-  renderPriorities(d);
-  renderBnplBanner(d);
-  renderProjection(d);
-  renderRecommendations(d, profile);
-}
-
-/* STAT TILES */
-function renderStats(d) {
-  // Income
-  qs('#stat-income').textContent = INR(d.income);
-  const stabMap = {
-    'family_supported_fixed': 'Fixed family support',
-    'family_supported_variable': 'Variable family support',
-    'gig_variable': 'Gig / freelance income',
-    'mixed': 'Mixed income sources',
-  };
-  qs('#stat-income-sub').innerHTML = d.income > 0
-    ? `<span class="badge green">Monthly</span> ${stabMap[Object.keys(stabMap).find(k => (d.phase || '').includes(k)) || ''] || 'Monthly allowance'}`
-    : 'Complete Phase 2 to fill this';
-
-  // Expenses
-  qs('#stat-expenses').textContent = INR(d.totalEx);
-  const expPct = PCT(d.totalEx, d.income);
-  qs('#stat-expenses-sub').innerHTML = d.income > 0
-    ? `<span class="badge ${expPct > 80 ? 'red' : expPct > 60 ? 'amber' : 'green'}">${expPct}% of income</span>`
-    : 'Complete Phase 3 to fill this';
-
-  // Surplus
-  const surplusEl = qs('#stat-surplus');
-  surplusEl.textContent = INR(Math.abs(d.surplus));
-  if (d.surplus < 0) {
-    surplusEl.className = 'stat-value red';
-    qs('#stat-surplus-sub').innerHTML = `<span class="badge red">Deficit</span> Spending exceeds income`;
-    qs('.stat-card.green').classList.replace('green','red');
-  } else {
-    qs('#stat-surplus-sub').innerHTML = `<span class="badge green">Available</span> After all expenses`;
+  function metric(label, value, note, tone) {
+    var box = el('div', 'metric');
+    box.appendChild(el('span', 'metric-label', label));
+    box.appendChild(el('span', 'metric-value' + (tone ? ' ' + tone : ''), value));
+    if (note) box.appendChild(el('span', 'metric-note', note));
+    return box;
   }
-  qs('#surplus-val').textContent = INR(d.surplus);
-  qs('#surplus-val').style.color = d.surplus < 0 ? 'var(--red)' : 'var(--green)';
+  function emptyNote(text) { return el('p', 'empty', text); }
 
-  // Emergency fund
-  const efEl = qs('#stat-ef');
-  const efFilled = d.efMonths > 0;
-  efEl.textContent = efFilled ? `${d.efMonths.toFixed(1)} mo` : '—';
-  const efColor = d.efMonths >= d.efTarget ? 'green' : d.efMonths >= d.efTarget * 0.5 ? 'amber' : 'red';
-  qs('#stat-ef-sub').innerHTML = efFilled
-    ? `<span class="badge ${efColor}">${d.efMonths >= d.efTarget ? 'On track' : 'Below target'}</span> Target: ${d.efTarget} months`
-    : 'Share savings in Phase 4';
-}
+  function showStatus(title, body, tone) {
+    statusBox.className = 'notice' + (tone ? ' ' + tone : '');
+    statusBox.innerHTML = '';
+    statusBox.appendChild(el('h2', null, title));
+    statusBox.appendChild(el('p', 'empty', body));
+    var row = el('div', 'btn-row mt');
+    var a = el('a', 'btn', 'Start a conversation');
+    a.href = 'app.html';
+    row.appendChild(a);
+    statusBox.appendChild(row);
+    statusBox.classList.remove('hidden');
+    dash.classList.add('hidden');
+  }
 
-/* 50-30-20 BUDGET */
-function renderBudget(d) {
-  if (d.income === 0) {
-    qs('#budget-bars').innerHTML = '<div class="empty-state"><div class="empty-state-icon">💡</div><div class="empty-state-body">Share your income in Phase 2 to see your budget breakdown.</div></div>';
+  /* ---------------- derive figures from the profile ---------------- */
+  function derive(p) {
+    var money  = p.money_in   || {};
+    var exp    = p.expenses   || {};
+    var safety = p.safety_net || {};
+    var bnpl   = exp.bnpl_usage || {};
+    var acad   = p.academic   || {};
+
+    var num = function (v) { var n = Number(v); return isNaN(n) ? 0 : n; };
+
+    var income = num(money.family_support_amount) +
+                 num(money.gig_income_amount) +
+                 num(money.scholarship_stipend_amount);
+
+    var housing = exp.housing ? num(exp.housing.amount) : 0;
+    var commute = exp.commute ? num(exp.commute.amount) : 0;
+    var food    = num(exp.food_beyond_mess);
+    var shared  = num(exp.split_shared_expenses);
+    var discr   = num(exp.discretionary);
+    var bnplAmt = num(bnpl.typical_monthly_amount);
+
+    var subs = Array.isArray(exp.subscriptions)
+      ? exp.subscriptions.reduce(function (a, s) { return a + num(s && s.monthly_cost); }, 0)
+      : num(exp.subscriptions);
+
+    var needs   = housing + commute + food + shared;
+    var wants   = subs + discr + bnplAmt;
+    var totalEx = needs + wants;
+    var surplus = income - totalEx;
+
+    var savings    = num(safety.personal_savings_amount);
+    var essentials = needs > 0 ? needs : income * 0.5;
+    var efMonths   = essentials > 0 ? savings / essentials : 0;
+
+    var stability = String(money.income_stability || '');
+    var efTarget  = stability.indexOf('gig') > -1 ? 12
+                  : stability.indexOf('fixed') > -1 ? 3 : 6;
+
+    var apps   = Array.isArray(bnpl.apps_used) ? bnpl.apps_used : [];
+    var missed = !!bnpl.missed_or_min_only;
+    var score  = 0;
+    if (missed) score += 2;
+    if (apps.length >= 2) score += 1;
+    if (income > 0 && bnplAmt / income > 0.15) score += 1;
+
+    var debts = Array.isArray(p.debt) ? p.debt : [];
+    var goals = Array.isArray(p.goals) ? p.goals : [];
+    var credit = p.credit || {};
+
+    var now = new Date();
+    var gradYear = num(acad.expected_graduation_year) || (now.getFullYear() + 2);
+    var monthsToGrad = Math.max(1, (gradYear - now.getFullYear()) * 12 - now.getMonth());
+    var sip = Math.max(0, Math.round(Math.max(0, surplus) * 0.5));
+    var r = 0.01; // 12% p.a., compounded monthly
+    var corpus = sip > 0
+      ? Math.round(sip * ((Math.pow(1 + r, monthsToGrad) - 1) / r) * (1 + r))
+      : 0;
+
+    return {
+      income: income, housing: housing, commute: commute, food: food, shared: shared,
+      discr: discr, bnplAmt: bnplAmt, subs: subs,
+      needs: needs, wants: wants, totalEx: totalEx, surplus: surplus,
+      saved: Math.max(0, surplus),
+      tNeeds: income * 0.5, tWants: income * 0.3, tSaved: income * 0.2,
+      savings: savings, essentials: essentials, efMonths: efMonths, efTarget: efTarget,
+      efGap: Math.max(0, essentials * efTarget - savings),
+      apps: apps, missed: missed,
+      bnplRisk: ['low', 'moderate', 'high', 'critical'][Math.min(score, 3)],
+      debts: debts, goals: goals, credit: credit,
+      hasInsurance: !!(safety.health_insurance_cover &&
+                       String(safety.health_insurance_cover).toLowerCase() !== 'none'),
+      gradYear: gradYear, monthsToGrad: monthsToGrad, sip: sip, corpus: corpus,
+      contributed: sip * monthsToGrad,
+      phase: p.conversation_phase || 'rapport'
+    };
+  }
+
+  /* ---------------- sections ---------------- */
+  function renderSnapshot(d) {
+    var grid = document.getElementById('snapshot-grid');
+    grid.innerHTML = '';
+
+    grid.appendChild(metric('Money in', d.income > 0 ? INR(d.income) : '—',
+      d.income > 0 ? 'Per month, all sources' : 'Tell FinPal what comes in'));
+
+    grid.appendChild(metric('Money out', d.totalEx > 0 ? INR(d.totalEx) : '—',
+      d.income > 0 && d.totalEx > 0 ? PCT(d.totalEx, d.income) + '% of money in' : 'Tell FinPal what goes out',
+      d.income > 0 && PCT(d.totalEx, d.income) > 90 ? 'bad'
+        : d.income > 0 && PCT(d.totalEx, d.income) > 75 ? 'warn' : ''));
+
+    grid.appendChild(metric(d.surplus < 0 ? 'Short each month' : 'Left over',
+      d.income > 0 ? INR(Math.abs(d.surplus)) : '—',
+      d.surplus < 0 ? 'Spending is above income' : 'Before anything is saved',
+      d.surplus < 0 ? 'bad' : 'good'));
+
+    grid.appendChild(metric('Safety net',
+      d.savings > 0 ? d.efMonths.toFixed(1) + ' mo' : '—',
+      d.savings > 0 ? 'Target: ' + d.efTarget + ' months' : 'Share your savings with FinPal',
+      d.savings <= 0 ? '' : d.efMonths >= d.efTarget ? 'good'
+        : d.efMonths >= d.efTarget / 2 ? 'warn' : 'bad'));
+  }
+
+  function bar(label, actual, target, income, targetPct, fillClass) {
+    var row = el('div', 'bar-row');
+    var head = el('div', 'bar-head');
+    head.appendChild(el('span', 'bar-label', label));
+    head.appendChild(el('span', 'bar-nums', INR(actual) + ' / ' + INR(target)));
+    row.appendChild(head);
+
+    var track = el('div', 'bar-track');
+    var over  = actual > target * 1.05;
+    var fill  = el('div', 'bar-fill ' + (over ? 'warn' : (fillClass || '')));
+    fill.style.width = clamp(PCT(actual, income), 0, 100) + '%';
+    track.appendChild(fill);
+    var line = el('div', 'bar-target');
+    line.style.left = targetPct + '%';
+    track.appendChild(line);
+    row.appendChild(track);
+
+    row.appendChild(el('span', 'bar-status', over
+      ? PCT(actual, income) + '% — ' + INR(actual - target) + ' above the guideline'
+      : PCT(actual, income) + '% — within the guideline'));
+    return row;
+  }
+
+  function renderBudget(d) {
+    var box = document.getElementById('budget-bars');
+    box.innerHTML = '';
+    if (d.income <= 0) {
+      box.appendChild(emptyNote('Share what comes in each month and this fills in.'));
+      return;
+    }
+    box.appendChild(bar('Needs — housing, commute, food', d.needs, d.tNeeds, d.income, 50, ''));
+    box.appendChild(bar('Wants — subscriptions, BNPL, discretionary', d.wants, d.tWants, d.income, 30, ''));
+    box.appendChild(bar('Saved or repaid', d.saved, d.tSaved, d.income, 20, 'mint'));
+  }
+
+  function renderExpenses(d) {
+    var cols = document.getElementById('expense-columns');
+    var rows = document.getElementById('expense-rows');
+    cols.innerHTML = '';
+    rows.innerHTML = '';
+
+    var cats = [
+      { label: 'Housing',       amount: d.housing },
+      { label: 'Commute',       amount: d.commute },
+      { label: 'Food',          amount: d.food },
+      { label: 'Shared',        amount: d.shared },
+      { label: 'Subscriptions', amount: d.subs },
+      { label: 'BNPL',          amount: d.bnplAmt, flag: true },
+      { label: 'Other',         amount: d.discr }
+    ].filter(function (c) { return c.amount > 0; });
+
+    if (!cats.length) {
+      rows.appendChild(emptyNote('No expenses recorded yet — tell FinPal where the money goes.'));
+      return;
+    }
+
+    var max = cats.reduce(function (m, c) { return Math.max(m, c.amount); }, 0);
+
+    var chart = el('div', 'columns');
+    chart.setAttribute('role', 'img');
+    chart.setAttribute('aria-label', 'Monthly spending by category: ' +
+      cats.map(function (c) { return c.label + ' ' + INR(c.amount); }).join(', '));
+    cats.forEach(function (c) {
+      var col = el('div', 'column');
+      col.appendChild(el('span', 'column-val', INR(c.amount)));
+      var b = el('div', 'column-bar' + (c.flag ? '' : ' mint'));
+      b.style.height = Math.max(4, Math.round((c.amount / max) * 100)) + '%';
+      col.appendChild(b);
+      col.appendChild(el('span', 'column-cap', c.label));
+      chart.appendChild(col);
+    });
+    cols.appendChild(chart);
+
+    cats.forEach(function (c) {
+      var row = el('div', 'row');
+      row.appendChild(el('span', 'row-label', c.label));
+      row.appendChild(el('strong', null, INR(c.amount)));
+      if (d.income > 0) row.appendChild(el('span', 'badge', PCT(c.amount, d.income) + '% of income'));
+      rows.appendChild(row);
+    });
+  }
+
+  function renderEmergencyFund(d) {
+    var box = document.getElementById('ef-body');
+    box.innerHTML = '';
+
+    if (d.savings <= 0 && d.essentials <= 0) {
+      box.appendChild(emptyNote('Share your savings and essential spend to size a cushion.'));
+      return;
+    }
+
+    box.appendChild(metric('Saved so far', INR(d.savings),
+      d.essentials > 0 ? 'Covers ' + d.efMonths.toFixed(1) + ' months of essentials' : null,
+      d.efMonths >= d.efTarget ? 'good' : d.efMonths >= d.efTarget / 2 ? 'warn' : 'bad'));
+
+    var target = d.essentials * d.efTarget;
+    var track = el('div', 'bar-track');
+    track.style.marginTop = '14px';
+    var fill = el('div', 'bar-fill mint');
+    fill.style.width = clamp(PCT(d.savings, target), 0, 100) + '%';
+    track.appendChild(fill);
+    box.appendChild(track);
+    box.appendChild(el('span', 'bar-status',
+      INR(d.savings) + ' of a ' + INR(target) + ' target (' + d.efTarget + ' months)'));
+
+    if (d.efGap > 0) {
+      var note = el('p', 'small mt-s',
+        'Still ' + INR(d.efGap) + ' short' +
+        (d.saved > 0 ? ' — about ' + Math.ceil(d.efGap / d.saved) + ' months at your current surplus.' : '.'));
+      box.appendChild(note);
+    }
+
+    var cover = el('p', 'small mt-s');
+    cover.appendChild(el('span', 'badge ' + (d.hasInsurance ? 'good' : 'warn'),
+      d.hasInsurance ? 'Health cover in place' : 'No health cover recorded'));
+    box.appendChild(cover);
+  }
+
+  function renderDebt(d) {
+    var box = document.getElementById('debt-body');
+    box.innerHTML = '';
+
+    var riskTone = d.bnplRisk === 'low' ? 'good' : d.bnplRisk === 'moderate' ? 'warn' : 'bad';
+    var risk = el('p', null);
+    risk.appendChild(el('span', 'badge ' + riskTone, 'BNPL risk: ' + d.bnplRisk));
+    box.appendChild(risk);
+
+    if (d.bnplAmt > 0 || d.apps.length) {
+      box.appendChild(el('p', 'small muted',
+        (d.apps.length ? d.apps.length + ' pay-later app' + (d.apps.length > 1 ? 's' : '') : 'Pay-later use') +
+        ' at ' + INR(d.bnplAmt) + ' a month' +
+        (d.missed ? ' · a payment has been missed or paid as minimum only' : '')));
+    }
+
+    if (d.debts.length) {
+      var rows = el('div', 'rows mt');
+      d.debts.forEach(function (item) {
+        var row = el('div', 'row');
+        row.appendChild(el('span', 'row-label', F.titleise(item.type || item.name || 'Debt')));
+        if (item.amount != null || item.outstanding != null) {
+          row.appendChild(el('strong', null, INR(item.amount != null ? item.amount : item.outstanding)));
+        }
+        if (item.apr != null || item.interest_rate != null) {
+          var apr = item.apr != null ? item.apr : item.interest_rate;
+          row.appendChild(el('span', 'badge ' + (Number(apr) > 15 ? 'bad' : ''), apr + '% p.a.'));
+        }
+        rows.appendChild(row);
+      });
+      box.appendChild(rows);
+    } else {
+      box.appendChild(el('p', 'small muted mt-s', 'No loans or borrowings recorded.'));
+    }
+
+    if (d.credit.cards || d.credit.total_limit != null || d.credit.typical_utilization_pct != null) {
+      var c = el('div', 'rows mt');
+      if (d.credit.cards != null) {
+        var r1 = el('div', 'row');
+        r1.appendChild(el('span', 'row-label', 'Credit cards'));
+        r1.appendChild(el('strong', null, String(d.credit.cards)));
+        c.appendChild(r1);
+      }
+      if (d.credit.total_limit != null) {
+        var r2 = el('div', 'row');
+        r2.appendChild(el('span', 'row-label', 'Total limit'));
+        r2.appendChild(el('strong', null, INR(d.credit.total_limit)));
+        c.appendChild(r2);
+      }
+      if (d.credit.typical_utilization_pct != null) {
+        var util = Number(d.credit.typical_utilization_pct);
+        var r3 = el('div', 'row');
+        r3.appendChild(el('span', 'row-label', 'Typical utilisation'));
+        r3.appendChild(el('strong', null, util + '%'));
+        r3.appendChild(el('span', 'badge ' + (util > 30 ? 'warn' : 'good'),
+          util > 30 ? 'Above 30%' : 'Healthy'));
+        c.appendChild(r3);
+      }
+      box.appendChild(c);
+    }
+  }
+
+  function renderGoals(d) {
+    var box = document.getElementById('goals-body');
+    box.innerHTML = '';
+
+    if (!d.goals.length) {
+      box.appendChild(emptyNote('No goals set yet. Tell FinPal what you are saving towards.'));
+      return;
+    }
+
+    var rows = el('div', 'rows');
+    d.goals.forEach(function (g) {
+      var name   = g.name || g.goal || 'Goal';
+      var target = g.target_amount != null ? g.target_amount : g.amount;
+      var saved  = g.saved_amount != null ? g.saved_amount : g.current_amount;
+
+      var block = el('div');
+      var row = el('div', 'row');
+      row.appendChild(el('span', 'row-label', F.titleise(name)));
+      if (target != null) row.appendChild(el('strong', null, INR(target)));
+      if (g.timeline || g.by) row.appendChild(el('span', 'badge', String(g.timeline || g.by)));
+      block.appendChild(row);
+
+      if (target > 0 && saved != null) {
+        var track = el('div', 'bar-track');
+        track.style.marginTop = '6px';
+        var fill = el('div', 'bar-fill mint');
+        fill.style.width = clamp(PCT(saved, target), 0, 100) + '%';
+        track.appendChild(fill);
+        block.appendChild(track);
+        block.appendChild(el('span', 'bar-status', INR(saved) + ' saved of ' + INR(target)));
+      }
+      rows.appendChild(block);
+    });
+    box.appendChild(rows);
+  }
+
+  function renderProjection(d) {
+    var box = document.getElementById('projection-body');
+    box.innerHTML = '';
+
+    if (d.sip <= 0) {
+      box.appendChild(emptyNote(d.surplus < 0
+        ? 'There is no surplus to invest yet — closing the monthly gap comes first.'
+        : 'Once FinPal knows your income and expenses, it can project a SIP to graduation.'));
+      return;
+    }
+
+    var grid = el('div', 'snapshot-grid');
+    grid.appendChild(metric('Monthly SIP', INR(d.sip), 'Half of your surplus'));
+    grid.appendChild(metric('Months to graduation', String(d.monthsToGrad), 'Class of ' + d.gradYear));
+    grid.appendChild(metric('You contribute', INR(d.contributed), 'Over that period'));
+    grid.appendChild(metric('Projected value', INR(d.corpus), 'At 12% p.a., compounded monthly', 'good'));
+    box.appendChild(grid);
+
+    // Year-by-year columns, drawn with DOM elements only.
+    var years = Math.max(1, Math.ceil(d.monthsToGrad / 12));
+    var points = [];
+    for (var y = 1; y <= years; y++) {
+      var months = Math.min(d.monthsToGrad, y * 12);
+      var value = Math.round(d.sip * ((Math.pow(1.01, months) - 1) / 0.01) * 1.01);
+      points.push({ label: 'Yr ' + y, value: value });
+    }
+    var max = points[points.length - 1].value || 1;
+
+    var chart = el('div', 'columns mt');
+    chart.setAttribute('role', 'img');
+    chart.setAttribute('aria-label', 'Projected corpus: ' +
+      points.map(function (p) { return p.label + ' ' + INR(p.value); }).join(', '));
+    points.forEach(function (p) {
+      var col = el('div', 'column');
+      col.appendChild(el('span', 'column-val', INR(p.value)));
+      var b = el('div', 'column-bar');
+      b.style.height = Math.max(4, Math.round((p.value / max) * 100)) + '%';
+      col.appendChild(b);
+      col.appendChild(el('span', 'column-cap', p.label));
+      chart.appendChild(col);
+    });
+    box.appendChild(chart);
+
+    box.appendChild(el('p', 'small muted mt-s',
+      'An illustration, not a promise — returns vary and 12% is only an assumption.'));
+  }
+
+  function renderRecommendations(d) {
+    var list = document.getElementById('recommendations');
+    list.innerHTML = '';
+    var tips = [];
+
+    if (d.income <= 0) {
+      tips.push(['', 'Tell FinPal what comes in each month — nothing else can be calculated without it.']);
+    }
+    if (d.surplus < 0) {
+      tips.push(['bad', 'You are spending ' + INR(Math.abs(d.surplus)) +
+        ' more than you receive each month. Cutting the wants column is the fastest fix.']);
+    }
+    if (d.bnplRisk === 'high' || d.bnplRisk === 'critical') {
+      tips.push(['bad', 'Your pay-later use is rated ' + d.bnplRisk +
+        '. Clear the outstanding balances before adding any new app.']);
+    } else if (d.bnplAmt > 0 && d.income > 0 && d.bnplAmt / d.income > 0.1) {
+      tips.push(['warn', 'BNPL takes ' + PCT(d.bnplAmt, d.income) +
+        '% of your income. Under 10% is a safer ceiling for a student.']);
+    }
+    if (d.savings > 0 && d.efMonths < d.efTarget) {
+      tips.push(['warn', 'Your cushion covers ' + d.efMonths.toFixed(1) + ' months. Getting to ' +
+        d.efTarget + ' needs another ' + INR(d.efGap) + '.']);
+    }
+    var expensive = d.debts.filter(function (x) {
+      var apr = x.apr != null ? x.apr : x.interest_rate;
+      return Number(apr) > 15;
+    });
+    if (expensive.length) {
+      tips.push(['bad', 'You have ' + expensive.length + ' borrowing' + (expensive.length > 1 ? 's' : '') +
+        ' above 15% interest. Repaying those beats any investment return you are likely to get.']);
+    }
+    if (!d.hasInsurance) {
+      tips.push(['warn', 'No health cover is recorded. A single hospital bill can wipe out a student cushion — ' +
+        'check whether a family policy already covers you.']);
+    }
+    if (d.subs > 0 && d.income > 0 && d.subs / d.income > 0.05) {
+      tips.push(['warn', 'Subscriptions cost ' + INR(d.subs) + ' a month — ' + INR(d.subs * 12) +
+        ' a year. Worth auditing which ones you actually opened last month.']);
+    }
+    if (d.surplus > 0 && d.efMonths >= d.efTarget && !expensive.length) {
+      tips.push(['', 'Cushion funded and no expensive debt — a ' + INR(d.sip) +
+        ' monthly SIP is a reasonable next step to discuss with FinPal.']);
+    }
+    if (!tips.length) {
+      tips.push(['', 'Nothing urgent stands out. Keep the conversation going so the picture stays current.']);
+    }
+
+    tips.forEach(function (t) {
+      list.appendChild(el('li', t[0], t[1]));
+    });
+  }
+
+  /* ---------------- boot ---------------- */
+  function wireLinks(sid) {
+    var advisor = F.linkWithSession('app.html', sid);
+    ['advisor-link', 'continue-link'].forEach(function (id) {
+      var node = document.getElementById(id);
+      if (node) node.href = advisor;
+    });
+    var home = document.getElementById('home-link');
+    if (home) home.href = F.linkWithSession('index.html', sid);
+  }
+
+  var sid = F.sessionFromQuery();
+  wireLinks(sid);
+
+  if (!sid) {
+    document.getElementById('phase-badge').textContent = 'No session';
+    document.getElementById('page-lede').textContent =
+      'The dashboard reads the profile from an advisor session.';
+    showStatus('No conversation yet',
+      'Talk to FinPal first — the dashboard reads the profile from that session, ' +
+      'then keep the ?session link to come back to it.');
     return;
   }
 
-  const bars = [
-    {
-      label: 'Needs (Housing, Food, Commute)',
-      actual: d.needs, target: d.tNeeds, income: d.income,
-      color: 'var(--blue)', targetPct: 50,
-    },
-    {
-      label: 'Wants (Subscriptions, BNPL, Fun)',
-      actual: d.wants, target: d.tWants, income: d.income,
-      color: 'var(--accent)', targetPct: 30,
-    },
-    {
-      label: 'Savings / Debt Repayment',
-      actual: d.actualSavings, target: d.tSavings, income: d.income,
-      color: 'var(--green)', targetPct: 20,
-    },
-  ];
+  F.getProfile(sid).then(function (profile) {
+    var d = derive(profile);
 
-  qs('#budget-bars').innerHTML = bars.map(b => {
-    const actPct = PCT(b.actual, b.income);
-    const fillPct = clamp(actPct, 0, 100);
-    const targetLinePct = clamp(b.targetPct, 0, 100);
-    const status = b.actual <= b.target * 1.05 ? '✓ On target' : `${actPct}% — ${INR(b.actual - b.target)} over`;
-    const statusColor = b.actual <= b.target * 1.05 ? 'var(--green)' : 'var(--amber)';
-    return `<div class="bbar-row">
-      <div class="bbar-header">
-        <span class="bbar-label">${b.label}</span>
-        <span class="bbar-nums">${INR(b.actual)} <span style="color:var(--muted2)">/ ${INR(b.target)}</span></span>
-      </div>
-      <div class="bbar-track">
-        <div class="bbar-fill" style="width:${fillPct}%;background:${b.color};opacity:${b.actual > b.target ? 0.65 : 0.9}"></div>
-        <div class="bbar-target-line" style="left:${targetLinePct}%"></div>
-      </div>
-      <span class="bbar-status" style="color:${statusColor}">${status}</span>
-    </div>`;
-  }).join('');
-}
+    document.getElementById('phase-badge').textContent = F.titleise(d.phase);
+    document.getElementById('page-lede').textContent = d.income > 0
+      ? 'Everything below comes from what you told FinPal in this session.'
+      : 'The panels fill in as you tell FinPal more. Nothing is assumed for you.';
 
-/* EXPENSE BREAKDOWN */
-function renderExpenses(d, profile) {
-  const ex = profile.expenses || {};
-  const bnpl = ex.bnpl_usage || {};
-  const subsRaw = ex.subscriptions;
-  const subsAmt = Array.isArray(subsRaw)
-    ? subsRaw.reduce((a, s) => a + (s.monthly_cost || 0), 0)
-    : (Number(subsRaw) || 0);
+    renderSnapshot(d);
+    renderBudget(d);
+    renderExpenses(d);
+    renderEmergencyFund(d);
+    renderDebt(d);
+    renderGoals(d);
+    renderProjection(d);
+    renderRecommendations(d);
 
-  const cats = [
-    { icon: '🏠', label: 'Housing / PG / Hostel', amt: d.housing, bg: 'var(--blue-d)',   fill: 'var(--blue)' },
-    { icon: '🚇', label: 'Commute',                amt: d.commute, bg: 'var(--blue-d)',   fill: 'var(--blue)' },
-    { icon: '🍔', label: 'Food beyond mess',        amt: d.food,   bg: 'var(--accent-d)', fill: 'var(--accent)' },
-    { icon: '📱', label: 'Subscriptions',           amt: subsAmt,  bg: 'var(--amber-d)',  fill: 'var(--amber)' },
-    { icon: '💳', label: 'BNPL Apps',               amt: d.bnplAmt,bg: 'var(--red-d)',    fill: 'var(--red)' },
-    { icon: '🎮', label: 'Discretionary',           amt: d.discr,  bg: 'var(--green-d)', fill: 'var(--green)' },
-  ].filter(c => c.amt > 0);
-
-  if (cats.length === 0 || d.income === 0) {
-    qs('#expense-list').innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-body">Complete Phase 3 to see your expense breakdown.</div></div>';
-    return;
-  }
-
-  qs('#expense-list').innerHTML = cats.map(c => {
-    const pct = PCT(c.amt, d.income);
-    const fillPct = clamp(pct, 0, 100);
-    return `<div class="exp-row">
-      <div class="exp-row-header">
-        <div class="exp-icon-label">
-          <div class="exp-icon" style="background:${c.bg}">${c.icon}</div>
-          <span class="exp-name">${c.label}</span>
-        </div>
-        <div>
-          <span class="exp-amount">${INR(c.amt)}</span>
-          <span class="exp-pct">${pct}%</span>
-        </div>
-      </div>
-      <div class="exp-track">
-        <div class="exp-fill" style="width:${fillPct}%;background:${c.fill}"></div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-/* PRIORITY STACK */
-function renderPriorities(d) {
-  const priorities = [];
-
-  if (d.highInterestDebt) {
-    priorities.push({
-      rank: 1, color: 'var(--red)', bg: 'var(--red-d)',
-      action: `Pay high-interest debt first (${d.highInterestDebt.apr}% APR)`,
-      reason: `This guarantees a ${d.highInterestDebt.apr}% return — no investment beats that. Clear it before investing anything.`,
-    });
-  }
-
-  if (!d.hasInsurance) {
-    priorities.push({
-      rank: priorities.length + 1, color: 'var(--amber)', bg: 'var(--amber-d)',
-      action: 'Get health insurance coverage',
-      reason: 'One medical emergency without cover can wipe out savings and force debt. Check your family plan or a low-cost student policy.',
-    });
-  }
-
-  if (d.efMonths < d.efTarget) {
-    const gap = Math.round((d.efTarget - d.efMonths) * d.essentials);
-    priorities.push({
-      rank: priorities.length + 1, color: 'var(--blue)', bg: 'var(--blue-d)',
-      action: `Build emergency fund to ${d.efTarget}-month target`,
-      reason: `You have ${d.efMonths.toFixed(1)} months of cover. Need ${INR(gap)} more to hit the ${d.efTarget}-month buffer.`,
-    });
-  }
-
-  if (priorities.length === 0) {
-    priorities.push({
-      rank: 1, color: 'var(--green)', bg: 'var(--green-d)',
-      action: 'Ready to invest — great foundation',
-      reason: 'Debt, insurance, and emergency fund are on track. Focus on growing your surplus into long-term investments.',
-    });
-  } else if (d.surplus > 0) {
-    priorities.push({
-      rank: priorities.length + 1, color: 'var(--muted)', bg: 'var(--surface3)',
-      action: 'Investments — after priorities above',
-      reason: `You have ${INR(d.surplus)} available monthly. Start PPF or a simple index fund SIP once the priorities above are addressed.`,
-    });
-  }
-
-  qs('#priority-list').innerHTML = priorities.map(p => `
-    <div class="priority-item">
-      <div class="priority-rank" style="background:${p.bg};color:${p.color}">${p.rank}</div>
-      <div class="priority-body">
-        <div class="priority-action">${p.action}</div>
-        <div class="priority-reason">${p.reason}</div>
-      </div>
-    </div>`).join('');
-}
-
-/* BNPL BANNER */
-function renderBnplBanner(d) {
-  const banner = qs('#bnpl-banner');
-  if (d.bnplScore === 0) { banner.hidden = true; return; }
-
-  const cfg = {
-    low:      { color: 'var(--green)',  bg: 'var(--green-d)',  label: 'Low Risk',      msg: 'BNPL usage appears manageable.' },
-    moderate: { color: 'var(--amber)',  bg: 'var(--amber-d)',  label: 'Moderate Risk', msg: `${d.apps.join(' + ')} — watch total due dates.` },
-    high:     { color: 'var(--red)',    bg: 'var(--red-d)',    label: 'High Risk',     msg: d.missed ? 'Missed payment detected — pay in full now to stop interest compounding.' : 'Multiple BNPL apps increase the risk of missed payments.' },
-    critical: { color: 'var(--red)',    bg: 'var(--red-d)',    label: 'Critical',      msg: 'Missed payment + multiple apps = high-interest compounding on multiple fronts. Pay full balance this month.' },
-  }[d.bnplRisk];
-
-  banner.hidden = false;
-  banner.innerHTML = `<div class="bnpl-risk-banner" style="background:${cfg.bg};border:1px solid ${cfg.color}33">
-    <div class="bnpl-risk-dot" style="background:${cfg.color}"></div>
-    <div>
-      <div class="bnpl-risk-text" style="color:${cfg.color}">BNPL Risk: ${cfg.label}</div>
-      <div class="bnpl-risk-sub">${cfg.msg}</div>
-    </div>
-    <span class="badge" style="background:${cfg.color}22;color:${cfg.color};margin-left:auto">${d.apps.length} app${d.apps.length !== 1 ? 's' : ''}</span>
-  </div>`;
-}
-
-/* SAVINGS PROJECTION CHART */
-function renderProjection(d) {
-  qs('#proj-sip').textContent    = d.sipAmount > 0 ? INR(d.sipAmount) + '/mo' : '—';
-  qs('#proj-corpus').textContent = d.corpus > 0 ? INR(d.corpus) : '—';
-
-  const canvas = qs('#proj-canvas');
-  const dpr = window.devicePixelRatio || 1;
-  const W = canvas.parentElement.offsetWidth;
-  const H = 160;
-  canvas.width  = W * dpr;
-  canvas.height = H * dpr;
-  canvas.style.width  = W + 'px';
-  canvas.style.height = H + 'px';
-
-  const ctx = canvas.getContext('2d');
-  ctx.scale(dpr, dpr);
-
-  if (d.sipAmount === 0 || d.income === 0) {
-    ctx.fillStyle = '#4a5a3a';
-    ctx.font = '13px "Plus Jakarta Sans", system-ui';
-    ctx.textAlign = 'center';
-    ctx.fillText('Complete the conversation to see your projection', W/2, H/2);
-    return;
-  }
-
-  // Build monthly data points
-  const months = d.monthsToGrad;
-  const points = [];
-  let acc = d.savings; // start from current savings
-  for (let m = 0; m <= months; m++) {
-    acc = acc * (1 + d.r) + d.sipAmount;
-    points.push(acc);
-  }
-  const maxVal = Math.max(...points);
-
-  const pad = { top: 12, right: 16, bottom: 30, left: 14 };
-  const gW = W - pad.left - pad.right;
-  const gH = H - pad.top - pad.bottom;
-
-  const toX = i => pad.left + (i / (points.length - 1)) * gW;
-  const toY = v => pad.top + gH - (v / maxVal) * gH;
-
-  // Area gradient fill
-  const grad = ctx.createLinearGradient(0, pad.top, 0, H - pad.bottom);
-  grad.addColorStop(0, 'rgba(74,222,128,0.25)');
-  grad.addColorStop(1, 'rgba(74,222,128,0.02)');
-
-  ctx.beginPath();
-  ctx.moveTo(toX(0), toY(points[0]));
-  for (let i = 1; i < points.length; i++) ctx.lineTo(toX(i), toY(points[i]));
-  ctx.lineTo(toX(points.length - 1), H - pad.bottom);
-  ctx.lineTo(toX(0), H - pad.bottom);
-  ctx.closePath();
-  ctx.fillStyle = grad;
-  ctx.fill();
-
-  // Line
-  ctx.beginPath();
-  ctx.moveTo(toX(0), toY(points[0]));
-  for (let i = 1; i < points.length; i++) ctx.lineTo(toX(i), toY(points[i]));
-  ctx.strokeStyle = 'rgba(74,222,128,0.85)';
-  ctx.lineWidth = 2;
-  ctx.lineJoin = 'round';
-  ctx.stroke();
-
-  // End dot
-  ctx.beginPath();
-  ctx.arc(toX(points.length - 1), toY(points[points.length - 1]), 4, 0, Math.PI * 2);
-  ctx.fillStyle = '#4ADE80';
-  ctx.fill();
-
-  // X axis labels
-  ctx.fillStyle = '#4a5a3a';
-  ctx.font = '10px "Plus Jakarta Sans", system-ui';
-  ctx.textAlign = 'center';
-  const now = new Date();
-  ctx.fillText('Today', pad.left, H - 8);
-  ctx.fillText(d.gradYear.toString(), toX(points.length - 1), H - 8);
-
-  // Grid lines
-  ctx.strokeStyle = 'rgba(138,155,115,0.08)';
-  ctx.lineWidth = 1;
-  [0.25, 0.5, 0.75].forEach(f => {
-    const y = pad.top + gH * (1 - f);
-    ctx.beginPath();
-    ctx.moveTo(pad.left, y);
-    ctx.lineTo(W - pad.right, y);
-    ctx.stroke();
+    statusBox.classList.add('hidden');
+    dash.classList.remove('hidden');
+  }).catch(function (err) {
+    document.getElementById('phase-badge').textContent = 'Unavailable';
+    document.getElementById('page-lede').textContent = 'Could not load this session.';
+    showStatus('Session unavailable',
+      (err && err.message) || 'That session could not be loaded. Start a new conversation.',
+      err && err.status === 404 ? 'warn' : 'bad');
   });
-}
-
-/* RECOMMENDATIONS */
-function renderRecommendations(d, profile) {
-  const recs = [];
-
-  // Deficit
-  if (d.surplus < 0) {
-    recs.push({ type: 'critical', icon: '🚨', text: `<strong>Spending exceeds income by ${INR(Math.abs(d.surplus))}/month.</strong> Identify one category to cut first — even ₹500 less in discretionary spend helps immediately.` });
-  }
-
-  // BNPL missed payment
-  if (d.missed) {
-    recs.push({ type: 'critical', icon: '⚠️', text: `<strong>Pay your BNPL balance in full this month.</strong> A missed payment can trigger 24-36% APR on the overdue amount. The interest saved this year alone matters more than any investment return.` });
-  }
-
-  // High interest debt
-  if (d.highInterestDebt) {
-    recs.push({ type: 'warning', icon: '🏦', text: `<strong>Avalanche method:</strong> Pay ${d.highInterestDebt.type || 'high-interest debt'} at ${d.highInterestDebt.apr}% APR first. Paying it off gives a guaranteed ${d.highInterestDebt.apr}% return — nothing in the market beats that.` });
-  }
-
-  // Emergency fund
-  if (d.efMonths < d.efTarget && d.efMonths > 0) {
-    const monthsLeft = (d.efTarget - d.efMonths).toFixed(1);
-    recs.push({ type: 'warning', icon: '🛡️', text: `<strong>Emergency fund is ${d.efMonths.toFixed(1)} of ${d.efTarget} months.</strong> Need ${monthsLeft} more months of cover. Keep it in a savings account or liquid fund — not stocks, not FDs.` });
-  } else if (d.savings === 0) {
-    recs.push({ type: 'warning', icon: '🛡️', text: `<strong>Start an emergency fund first</strong> — even ₹1,000 in a savings account. Target: ${d.efTarget} months of essentials (${INR(d.essentials * d.efTarget)}).` });
-  }
-
-  // No health insurance
-  if (!d.hasInsurance) {
-    recs.push({ type: 'warning', icon: '🏥', text: `<strong>Check health insurance coverage.</strong> Ask if your family plan covers you as a dependent. One hospital visit without insurance can wipe out months of savings.` });
-  }
-
-  // Pay yourself first
-  if (d.surplus > 0 && d.actualSavings < d.tSavings) {
-    recs.push({ type: 'info', icon: '💡', text: `<strong>Pay yourself first:</strong> On the day your ₹${(d.income/1000).toFixed(0)}k arrives, move ${INR(d.sipAmount)} to savings before spending anything. Not from what's left — from the top.` });
-  }
-
-  // Surplus ready to invest
-  if (d.surplus > 0 && d.efMonths >= d.efTarget && !d.highInterestDebt && d.hasInsurance) {
-    recs.push({ type: 'good', icon: '📈', text: `<strong>Your safety net is solid — you're ready to invest.</strong> Start a SIP of ${INR(d.sipAmount)}/month in a low-cost index fund. Even this amount compounds meaningfully before graduation.` });
-  }
-
-  // BNPL 2+ apps
-  if (d.apps.length >= 2 && !d.missed) {
-    recs.push({ type: 'info', icon: '📱', text: `<strong>Close all but one BNPL app.</strong> Multiple apps (${d.apps.join(', ')}) make it easy to lose track of total dues. One app, one due date, one calendar reminder.` });
-  }
-
-  // Rule of 72 teaser
-  if (d.corpus > 0) {
-    const doubleYears = Math.round(72 / 12);
-    recs.push({ type: 'good', icon: '🌱', text: `<strong>The Rule of 72:</strong> At 12% return, your savings double every ~${doubleYears} years. Starting ${INR(d.sipAmount)}/month now gives you ${INR(d.corpus)} by graduation — that's compounding at work.` });
-  }
-
-  if (recs.length === 0) {
-    recs.push({ type: 'info', icon: '💬', text: '<strong>Continue your conversation with FinPal</strong> to generate personalized recommendations. The more you share, the sharper the advice.' });
-  }
-
-  qs('#rec-list').innerHTML = recs.slice(0, 5).map(r => `
-    <div class="rec-item ${r.type}">
-      <span class="rec-icon">${r.icon}</span>
-      <div class="rec-text">${r.text}</div>
-    </div>`).join('');
-}
-
-/* ─── INIT ─── */
-loadProfile();
+})();
 </script>
 </body>
 </html>
