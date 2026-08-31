@@ -1,349 +1,382 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FinPal — AI advisor</title>
-<meta name="description" content="Talk or type to FinPal, a money advisor for Indian students.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FinPal — Chat</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #090C07;
+      --surface: #111509;
+      --surface2: #182212;
+      --border: rgba(138,155,115,0.15);
+      --accent: #F97316;
+      --accent-dim: rgba(249,115,22,0.15);
+      --accent-g: #4ADE80;
+      --accent-g-dim: rgba(74,222,128,0.15);
+      --user-bubble: rgba(249,115,22,0.18);
+      --user-border: rgba(249,115,22,0.25);
+      --advisor-bubble: rgba(24,34,18,0.9);
+      --text: #EFF3EA;
+      --text-muted: #7A876A;
+      --danger: #ef4444;
+      --warn: #f59e0b;
+      --fd: 'Syne', system-ui, sans-serif;
+      --fb: 'Plus Jakarta Sans', system-ui, sans-serif;
+    }
+
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap');
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--fb), -apple-system, BlinkMacSystemFont, sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .header-back {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      padding: 6px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      transition: color 0.2s, border-color 0.2s;
+      font-family: var(--fd, system-ui);
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .header-back:hover { color: var(--text); border-color: rgba(138,155,115,0.3); }
+
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: 4px;
+    }
+    .header-logo-mark {
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 18px;
+    }
+    .header-logo-mark span {
+      display: block;
+      width: 3px;
+      border-radius: 2px;
+      background: var(--accent);
+    }
+    .header-logo-mark span:nth-child(1) { height: 8px; }
+    .header-logo-mark span:nth-child(2) { height: 14px; }
+    .header-logo-mark span:nth-child(3) { height: 18px; }
+    .header-logo-mark span:nth-child(4) { height: 11px; }
+    .header-logo-mark span:nth-child(5) { height: 6px; }
+    .header-brand { font-family: var(--fd, system-ui); font-size: 1rem; font-weight: 700; color: var(--text); }
+
+    .dashboard-btn {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 600;
+      font-family: var(--fd, system-ui);
+      padding: 5px 13px;
+      border: 1px solid rgba(249,115,22,0.35);
+      border-radius: 6px;
+      transition: background 0.2s, border-color 0.2s;
+      letter-spacing: 0.02em;
+    }
+    .dashboard-btn:hover { background: var(--accent-dim); border-color: rgba(249,115,22,0.6); }
+
+    .phase-badge {
+      margin-left: 10px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      background: var(--accent-g-dim);
+      color: var(--accent-g);
+      padding: 3px 10px;
+      border-radius: 999px;
+      text-transform: capitalize;
+      letter-spacing: 0.04em;
+    }
+
+    .layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── Transcript ── */
+    .chat-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--border);
+      min-width: 0;
+    }
+
+    .transcript {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      scroll-behavior: smooth;
+    }
+
+    .bubble-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      max-width: 82%;
+    }
+    .bubble-row.user { align-self: flex-end; flex-direction: row-reverse; }
+    .bubble-row.advisor { align-self: flex-start; }
+
+    .avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; font-weight: 700;
+    }
+    .avatar.user { background: var(--user-bubble); border: 1px solid var(--user-border); color: var(--accent); }
+    .avatar.advisor { background: var(--accent-g-dim); color: var(--accent-g); font-family: var(--fd, system-ui); }
+
+    .bubble {
+      padding: 10px 14px;
+      border-radius: 16px;
+      font-size: 0.88rem;
+      line-height: 1.55;
+      max-width: 100%;
+      word-break: break-word;
+    }
+    .bubble-row.user .bubble {
+      background: var(--user-bubble);
+      border: 1px solid var(--user-border);
+      border-bottom-right-radius: 4px;
+    }
+    .bubble-row.advisor .bubble {
+      background: var(--advisor-bubble);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 4px;
+    }
+
+    /* ── Controls ── */
+    .controls {
+      border-top: 1px solid var(--border);
+      padding: 14px 16px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-shrink: 0;
+      background: var(--surface);
+    }
+
+    #text-input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 10px 14px;
+      font-size: 0.88rem;
+      font-family: var(--fb, system-ui);
+      outline: none;
+    }
+    #text-input:focus { border-color: var(--accent); }
+    #text-input::placeholder { color: var(--text-muted); }
+
+    #send-btn {
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      padding: 10px 18px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: var(--fd, system-ui);
+      white-space: nowrap;
+      transition: opacity 0.2s;
+    }
+    #send-btn:hover { opacity: 0.88; }
+
+    #mic-btn {
+      width: 48px; height: 48px; border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      font-size: 1.2rem;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.15s;
+      display: flex; align-items: center; justify-content: center;
+      user-select: none;
+    }
+    #mic-btn.recording {
+      background: var(--danger);
+      border-color: var(--danger);
+      box-shadow: 0 0 0 6px rgba(239,68,68,0.2);
+      animation: pulse-mic 1s infinite;
+    }
+    #mic-btn.processing {
+      background: var(--warn);
+      border-color: var(--warn);
+      cursor: not-allowed;
+    }
+    #mic-btn.speaking {
+      background: var(--accent-g-dim);
+      border-color: var(--accent-g);
+    }
+
+    @keyframes pulse-mic {
+      0%, 100% { box-shadow: 0 0 0 6px rgba(239,68,68,0.2); }
+      50%       { box-shadow: 0 0 0 12px rgba(239,68,68,0.08); }
+    }
+
+    #status-label {
+      font-size: 0.73rem;
+      color: var(--text-muted);
+      min-width: 70px;
+      text-align: center;
+    }
+
+    /* ── Profile panel ── */
+    .profile-col {
+      width: 280px;
+      flex-shrink: 0;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .profile-col h2 {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .profile-section { display: flex; flex-direction: column; gap: 4px; }
+    .profile-section-title {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 2px;
+    }
+
+    .profile-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+      font-size: 0.8rem;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: var(--surface2);
+    }
+    .profile-key { color: var(--text-muted); flex-shrink: 0; }
+    .profile-val { color: var(--text); text-align: right; font-weight: 500; }
+
+    .empty-profile {
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    .typing-dots {
+      display: inline-block;
+      color: var(--text-muted);
+      animation: blink 1.2s step-start infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    @media (max-width: 640px) {
+      .profile-col { display: none; }
+      .header-back span { display: none; }
+    }
+  </style>
 </head>
 <body>
 
-<header class="site-header">
-  <div class="wrap">
-    <a class="brand" href="index.html">Fin<span>Pal</span></a>
-    <nav class="nav" aria-label="Primary">
-      <a class="btn small secondary" id="home-link" href="index.html">Home</a>
-      <a class="btn small" id="dashboard-link" href="dashboard.html">Open dashboard</a>
-    </nav>
+<header>
+  <a href="index.html" class="header-back">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    <span>Home</span>
+  </a>
+  <div class="header-logo">
+    <div class="header-logo-mark">
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <span class="header-brand">FinPal</span>
   </div>
+  <a href="#" class="dashboard-btn" id="dashboard-btn" style="display:none">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    <span>View Plan</span>
+  </a>
+  <span class="phase-badge" id="phase-badge">starting</span>
 </header>
 
-<main class="section">
-  <div class="wrap stack">
+<div class="layout">
 
-    <h1>Talk to FinPal</h1>
-    <p class="lede">
-      Tell it what comes in and what goes out — in rupees, in your own words.
-      Speak with the microphone, or type below.
-    </p>
-
-    <div class="chat-shell">
-
-      <!-- ===== Transcript ===== -->
-      <div id="transcript" class="transcript" role="log" aria-live="polite" aria-label="Conversation with FinPal" tabindex="0">
-        <div class="msg">
-          <span class="msg-who">FinPal</span>
-          <span class="msg-body" id="greeting">Connecting to the advisor…</span>
-        </div>
+  <!-- Transcript -->
+  <div class="chat-col">
+    <div class="transcript" id="transcript">
+      <div class="bubble-row advisor">
+        <div class="avatar advisor">FP</div>
+        <div class="bubble">Hi! I'm your FinPal advisor. Hold the mic button and tell me a bit about yourself — we'll start with where you study and how you're managing money right now.</div>
       </div>
-
-      <!-- ===== Microphone + status ===== -->
-      <div class="mic-panel">
-        <button type="button" id="mic-btn" class="mic-btn" data-state="idle"
-                aria-label="Start recording your question" disabled>
-          <span aria-hidden="true">🎙</span>
-        </button>
-        <p id="status-line" class="status-line" role="status" aria-live="polite">Connecting…</p>
-      </div>
-
-      <!-- ===== Text composer ===== -->
-      <form id="composer" class="composer" autocomplete="off">
-        <label class="sr-only" for="message-input">Your message to FinPal</label>
-        <input type="text" id="message-input" name="message"
-               placeholder="Type your message" disabled>
-        <button type="submit" class="btn" id="send-btn" disabled>Send</button>
-      </form>
-
-      <!-- ===== Suggestions ===== -->
-      <div class="suggestions" id="suggestions" aria-label="Suggested questions">
-        <button type="button" class="chip" data-say="I get ₹14,000 a month from home.">Share my monthly income</button>
-        <button type="button" class="chip" data-say="Where is my money actually going each month?">Where is my money going?</button>
-        <button type="button" class="chip" data-say="How big should my emergency fund be as a student?">Emergency fund size</button>
-        <button type="button" class="chip" data-say="I use two BNPL apps — should I worry?">Is my BNPL use risky?</button>
-        <button type="button" class="chip" data-say="How much could I have saved by graduation if I start a SIP now?">SIP by graduation</button>
-      </div>
-
-      <!-- ===== Profile so far ===== -->
-      <section class="card" aria-labelledby="profile-title">
-        <h2 id="profile-title" class="small"
-            style="font-family:'Manrope',sans-serif;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-muted);font-size:12px;">
-          What FinPal knows so far
-        </h2>
-        <div id="profile-panel" class="profile-panel mt">
-          <p class="empty">Nothing yet — the panel fills in as you talk.</p>
-        </div>
-        <div class="btn-row mt">
-          <a class="btn secondary small" id="profile-dashboard-link" href="dashboard.html">See the full dashboard</a>
-        </div>
-      </section>
-
     </div>
 
-    <p class="small muted lede">
-      FinPal is an educational tool, not a licensed financial adviser.
-    </p>
+    <div class="controls">
+      <button id="mic-btn" title="Hold to speak">🎤</button>
+      <span id="status-label">ready</span>
+      <input id="text-input" type="text" placeholder="Or type a message…" />
+      <button id="send-btn">Send</button>
+    </div>
   </div>
-</main>
 
-<footer class="site-footer">
-  <div class="wrap"><p class="small">FinPal · Deterministic calculations, plain answers</p></div>
-</footer>
+  <!-- Profile panel -->
+  <div class="profile-col">
+    <h2>Your Profile</h2>
+    <div id="profile-content">
+      <p class="empty-profile">Profile fills in as you talk.</p>
+    </div>
+  </div>
 
-<script src="api.js"></script>
-<script>
-(function () {
-  'use strict';
-  var F = window.FinPal;
-
-  var transcriptEl = document.getElementById('transcript');
-  var greetingEl   = document.getElementById('greeting');
-  var micBtn       = document.getElementById('mic-btn');
-  var statusEl     = document.getElementById('status-line');
-  var form         = document.getElementById('composer');
-  var input        = document.getElementById('message-input');
-  var sendBtn      = document.getElementById('send-btn');
-  var suggestions  = document.getElementById('suggestions');
-  var profilePanel = document.getElementById('profile-panel');
-
-  var sessionId = null;
-  var busy      = false;
-  var recorder  = null;   // active recording handle
-  var recording = false;
-
-  /* ---------------- status ---------------- */
-  var STATUS_TEXT = {
-    connecting: 'Connecting…',
-    ready:      'Ready — tap the microphone or type',
-    recording:  'Recording… tap again to send',
-    processing: 'Thinking…',
-    speaking:   'Speaking…'
-  };
-
-  function setState(state, message) {
-    micBtn.dataset.state = (state === 'recording' || state === 'processing' || state === 'speaking')
-      ? state : 'idle';
-    statusEl.textContent = message || STATUS_TEXT[state] || '';
-    statusEl.dataset.tone =
-      state === 'error' ? 'error' :
-      (state === 'recording' || state === 'processing' || state === 'speaking') ? 'live' : '';
-
-    micBtn.setAttribute('aria-label',
-      state === 'recording' ? 'Stop recording and send' : 'Start recording your question');
-
-    var lock = (state === 'processing' || state === 'speaking');
-    input.disabled   = lock || !sessionId;
-    sendBtn.disabled = lock || !sessionId;
-    micBtn.disabled  = lock || !sessionId || !F.micSupported();
-    Array.prototype.forEach.call(suggestions.querySelectorAll('.chip'), function (c) {
-      c.disabled = lock || !sessionId;
-    });
-  }
-
-  /* ---------------- transcript ---------------- */
-  function scrollToEnd() { transcriptEl.scrollTop = transcriptEl.scrollHeight; }
-
-  function addMessage(role, text) {
-    var wrap = document.createElement('div');
-    wrap.className = 'msg ' + role;
-
-    var who = document.createElement('span');
-    who.className = 'msg-who';
-    who.textContent = role === 'user' ? 'You' : (role === 'error' ? 'Problem' : 'FinPal');
-
-    var body = document.createElement('span');
-    body.className = 'msg-body';
-    body.textContent = text;
-
-    wrap.appendChild(who);
-    wrap.appendChild(body);
-    transcriptEl.appendChild(wrap);
-    scrollToEnd();
-    return body;
-  }
-
-  /* ---------------- profile panel ---------------- */
-  function renderProfile(profile) {
-    if (!profile) return;
-    var money  = profile.money_in  || {};
-    var exp    = profile.expenses  || {};
-    var safety = profile.safety_net || {};
-    var bnpl   = exp.bnpl_usage || {};
-    var acad   = profile.academic || {};
-
-    var subs = Array.isArray(exp.subscriptions)
-      ? exp.subscriptions.reduce(function (a, s) { return a + (Number(s && s.monthly_cost) || 0); }, 0)
-      : Number(exp.subscriptions);
-
-    var debts = Array.isArray(profile.debt) ? profile.debt : [];
-    var goals = Array.isArray(profile.goals) ? profile.goals : [];
-
-    var rows = [
-      ['Family support',   money.family_support_amount != null ? F.inr(money.family_support_amount) : null],
-      ['Gig income',       money.gig_income_amount != null ? F.inr(money.gig_income_amount) : null],
-      ['Scholarship',      money.scholarship_stipend_amount != null ? F.inr(money.scholarship_stipend_amount) : null],
-      ['Income stability', money.income_stability ? F.titleise(money.income_stability) : null],
-      ['Housing',          exp.housing && exp.housing.amount != null ? F.inr(exp.housing.amount) : null],
-      ['Commute',          exp.commute && exp.commute.amount != null ? F.inr(exp.commute.amount) : null],
-      ['Food beyond mess', exp.food_beyond_mess != null ? F.inr(exp.food_beyond_mess) : null],
-      ['Subscriptions',    subs ? F.inr(subs) : null],
-      ['BNPL per month',   bnpl.typical_monthly_amount != null ? F.inr(bnpl.typical_monthly_amount) : null],
-      ['Discretionary',    exp.discretionary != null ? F.inr(exp.discretionary) : null],
-      ['Savings',          safety.personal_savings_amount != null ? F.inr(safety.personal_savings_amount) : null],
-      ['Health cover',     safety.health_insurance_cover ? F.titleise(safety.health_insurance_cover) : null],
-      ['Year of study',    acad.year_of_study != null ? String(acad.year_of_study) : null],
-      ['Graduating',       acad.expected_graduation_year != null ? String(acad.expected_graduation_year) : null],
-      ['Debts tracked',    debts.length ? String(debts.length) : null],
-      ['Goals tracked',    goals.length ? String(goals.length) : null],
-      ['Stage',            profile.conversation_phase ? F.titleise(profile.conversation_phase) : null]
-    ].filter(function (r) { return r[1] != null && r[1] !== '—'; });
-
-    if (!rows.length) {
-      profilePanel.innerHTML = '';
-      var empty = document.createElement('p');
-      empty.className = 'empty';
-      empty.textContent = 'Nothing yet — the panel fills in as you talk.';
-      profilePanel.appendChild(empty);
-      return;
-    }
-
-    profilePanel.innerHTML = '';
-    rows.forEach(function (r) {
-      var row = document.createElement('div');
-      row.className = 'profile-row';
-      var k = document.createElement('span');
-      k.className = 'profile-key';
-      k.textContent = r[0];
-      var v = document.createElement('span');
-      v.className = 'profile-val';
-      v.textContent = r[1];
-      row.appendChild(k);
-      row.appendChild(v);
-      profilePanel.appendChild(row);
-    });
-  }
-
-  /* ---------------- links ---------------- */
-  function wireLinks() {
-    ['dashboard-link', 'profile-dashboard-link'].forEach(function (id) {
-      var el = document.getElementById(id);
-      if (el) el.href = F.linkWithSession('dashboard.html', sessionId);
-    });
-    var home = document.getElementById('home-link');
-    if (home) home.href = F.linkWithSession('index.html', sessionId);
-  }
-
-  /* ---------------- session ---------------- */
-  function startSession() {
-    setState('connecting');
-    var existing = F.sessionFromQuery();
-
-    // Continue an existing session when ?session=<id> is present and still valid.
-    if (existing) {
-      return F.getProfile(existing).then(function (profile) {
-        sessionId = existing;
-        wireLinks();
-        renderProfile(profile);
-        greetingEl.textContent =
-          'Welcome back. We can pick up exactly where we left off — what would you like to look at?';
-        setState('ready');
-      }).catch(function () {
-        // Session gone or unreachable: fall back to a fresh one.
-        return createFresh('That earlier session has expired, so this is a fresh start. ' +
-                           'Tell me what comes in each month and what goes out.');
-      });
-    }
-    return createFresh();
-  }
-
-  function createFresh(greeting) {
-    return F.createSession().then(function (data) {
-      sessionId = data && data.session_id;
-      if (!sessionId) throw new Error('No session id');
-      F.rememberSessionInUrl(sessionId);
-      wireLinks();
-      greetingEl.textContent = greeting ||
-        'Hi — I am FinPal. Tell me roughly what money comes in each month and where it goes, ' +
-        'and we will find out what your month really looks like.';
-      setState('ready');
-    }).catch(function (err) {
-      greetingEl.textContent =
-        (err && err.message) || 'Could not reach the advisor service.';
-      setState('error', 'Not connected — check that the backend is running, then reload.');
-      micBtn.disabled = true;
-      input.disabled = true;
-      sendBtn.disabled = true;
-    });
-  }
-
-  /* ---------------- text turn (streamed) ---------------- */
-  function sendText(message) {
-    if (busy || !sessionId || !message.trim()) return;
-    busy = true;
-    addMessage('user', message.trim());
-    setState('processing');
-
-    var bubble = addMessage('advisor', '…');
-    var first  = true;
-
-    F.streamChat(sessionId, message.trim(), {
-      onToken: function (token) {
-        if (first) { bubble.textContent = ''; first = false; }
-        bubble.textContent += token;
-        scrollToEnd();
-      },
-      onDone: function (payload) {
-        if (payload && payload.profile) renderProfile(payload.profile);
-      },
-      onError: function (err) {
-        bubble.parentNode.className = 'msg error';
-        bubble.textContent = (err && err.message) || 'The advisor could not reply.';
-      }
-    }).then(function () {
-      if (first) bubble.textContent = 'The advisor sent an empty reply. Please try again.';
-    }).catch(function (err) {
-      bubble.parentNode.className = 'msg error';
-      bubble.textContent = (err && err.message) || 'The advisor could not reply.';
-    }).then(function () {
-      busy = false;
-      setState('ready');
-      scrollToEnd();
-    });
-  }
-
-  form.addEventListener('submit', function (ev) {
-    ev.preventDefault();
-    var text = input.value;
-    if (!text.trim() || busy) return;
-    input.value = '';
-    sendText(text);
-  });
-
-  suggestions.addEventListener('click', function (ev) {
-    var chip = ev.target.closest('.chip');
-    if (!chip || busy) return;
-    sendText(chip.dataset.say || chip.textContent);
-  });
-
-  /* ---------------- voice turn ---------------- */
-  micBtn.addEventListener('click', function () {
-    if (busy || !sessionId) return;
-    if (recording) { stopAndSend(); } else { beginRecording(); }
-  });
-
-  function beginRecording() {
-    F.startRecording().then(function (handle) {
-      recorder  = handle;
-      recording = true;
-      setState('recording');
-    }).catch(function (err) {
-      setState('error', (err && err.message) || 'Microphone unavailable — type instead.');
-      micBtn.disabled = true;
-    });
-  }
+</div>
 
 <script>
 const API = 'http://localhost:8000';
@@ -356,10 +389,35 @@ let isBusy = false;
 let currentAudio = null;
 
 async function initSession() {
+  const existing = new URLSearchParams(location.search).get('session');
+  if (existing) {
+    // Resume: verify the session actually exists server-side before trusting it.
+    const check = await fetch(`${API}/api/sessions/${existing}/profile`).catch(() => null);
+    if (check && check.ok) {
+      sessionId = existing;
+      const profile = await check.json().catch(() => null);
+      if (profile) updateProfile(profile);
+      await replayHistory(existing);
+      wireDashboardBtn();
+      return;
+    }
+  }
   const r = await fetch(`${API}/api/sessions`, { method: 'POST' });
   const d = await r.json();
   sessionId = d.session_id;
   wireDashboardBtn();
+}
+
+async function replayHistory(sid) {
+  const res = await fetch(`${API}/api/sessions/${sid}/messages`).catch(() => null);
+  if (!res || !res.ok) return;
+  const { messages } = await res.json().catch(() => ({ messages: [] }));
+  if (!Array.isArray(messages) || messages.length === 0) return;
+  document.getElementById('transcript').innerHTML = '';
+  for (const m of messages) {
+    if (m.role === 'user') addBubble('user', m.content);
+    else if (m.role === 'assistant' && m.content) addBubble('advisor', stripMemoryTag(m.content));
+  }
 }
 
 function wireDashboardBtn() {
@@ -491,14 +549,161 @@ async function sendToAPI(formData, isVoice) {
   } finally {
     isBusy = false;
   }
+}
 
-  /* ---------------- boot ---------------- */
-  if (!F.micSupported()) {
-    micBtn.disabled = true;
-    micBtn.title = 'Voice input is not available in this browser';
+const micBtn = document.getElementById('mic-btn');
+
+async function startRec() {
+  if (isBusy || isRecording) return;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioChunks = [];
+    const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+      ? 'audio/webm;codecs=opus'
+      : MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')
+        ? 'audio/ogg;codecs=opus'
+        : 'audio/mp4';
+
+    mediaRecorder = new MediaRecorder(stream, { mimeType });
+    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+    mediaRecorder.onstop = async () => {
+      stream.getTracks().forEach(t => t.stop());
+      const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType });
+      if (blob.size < 1000) { setStatus('ready'); return; }
+      const fd = new FormData();
+      fd.append('audio', blob, 'recording' + mimeTypeToExt(mediaRecorder.mimeType));
+      await sendToAPI(fd, true);
+    };
+    mediaRecorder.start();
+    isRecording = true;
+    setStatus('recording');
+  } catch (e) {
+    alert('Microphone access denied. Use the text input instead.');
   }
-  startSession();
-})();
+}
+
+function stopRec() {
+  if (!isRecording || !mediaRecorder) return;
+  isRecording = false;
+  mediaRecorder.stop();
+}
+
+function mimeTypeToExt(mime) {
+  if (mime.includes('webm')) return '.webm';
+  if (mime.includes('ogg'))  return '.ogg';
+  if (mime.includes('mp4'))  return '.mp4';
+  return '.webm';
+}
+
+micBtn.addEventListener('mousedown',  e => { e.preventDefault(); startRec(); });
+micBtn.addEventListener('mouseup',    stopRec);
+micBtn.addEventListener('mouseleave', stopRec);
+micBtn.addEventListener('touchstart', e => { e.preventDefault(); startRec(); }, { passive: false });
+micBtn.addEventListener('touchend',   e => { e.preventDefault(); stopRec(); },  { passive: false });
+
+const textInput = document.getElementById('text-input');
+document.getElementById('send-btn').addEventListener('click', sendText);
+textInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendText(); });
+
+async function sendText() {
+  const msg = textInput.value.trim();
+  if (!msg || isBusy) return;
+  textInput.value = '';
+  await sendToAPI(msg, false);
+}
+
+function fmt(val) {
+  if (val === null || val === undefined) return null;
+  if (typeof val === 'number') return '₹' + val.toLocaleString('en-IN');
+  if (typeof val === 'boolean') return val ? 'Yes' : 'No';
+  if (typeof val === 'object') {
+    // Fields that should be a plain scalar occasionally come back as an
+    // object instead — shapes vary ({amount, note}, {stability, notes}, a
+    // bare {note}, etc.) — so recover generically rather than chasing each
+    // key name: prefer a numeric amount, then the first short string field,
+    // rather than ever rendering "[object Object]" or silently dropping it.
+    if (typeof val.amount === 'number') return '₹' + val.amount.toLocaleString('en-IN');
+    const firstString = Object.values(val).find(v => typeof v === 'string' && v.trim());
+    if (firstString) return firstString;
+    return null;
+  }
+  return String(val).replace(/_/g, ' ');
+}
+
+function profileRow(key, val) {
+  const v = fmt(val);
+  if (!v) return '';
+  return `<div class="profile-row">
+    <span class="profile-key">${key}</span>
+    <span class="profile-val">${escHtml(v)}</span>
+  </div>`;
+}
+
+function profileSection(title, rows) {
+  const content = rows.join('');
+  if (!content) return '';
+  return `<div class="profile-section">
+    <div class="profile-section-title">${title}</div>
+    ${content}
+  </div>`;
+}
+
+function updateProfile(p) {
+  if (!p) return;
+  document.getElementById('phase-badge').textContent =
+    (p.conversation_phase || 'rapport').replace(/_/g, ' ');
+
+  const ac = p.academic || {};
+  const mi = p.money_in || {};
+  const ex = p.expenses || {};
+  const sn = p.safety_net || {};
+  const cr = p.credit || {};
+
+  const academic = profileSection('Academic', [
+    profileRow('Field of study', ac.field_of_study),
+    profileRow('Year of study', ac.year_of_study != null ? String(ac.year_of_study) : null),
+    profileRow('Graduation year', ac.expected_graduation_year != null ? String(ac.expected_graduation_year) : null),
+  ]);
+  const moneyIn = profileSection('Money In', [
+    profileRow('Family support', mi.family_support_amount),
+    profileRow('Regularity', mi.family_support_regularity),
+    profileRow('Gig income', mi.gig_income_amount),
+    profileRow('Scholarship', mi.scholarship_stipend_amount),
+    profileRow('Stability', mi.income_stability),
+  ]);
+  const expenses = profileSection('Expenses', [
+    profileRow('Housing', ex.housing?.amount),
+    profileRow('Housing type', ex.housing?.type),
+    profileRow('Commute', ex.commute?.amount),
+    profileRow('Food (extra)', ex.food_beyond_mess),
+    profileRow('Subscriptions', ex.subscriptions),
+    profileRow('Discretionary', ex.discretionary),
+  ]);
+  const safetyNet = profileSection('Safety Net', [
+    profileRow('Savings', sn.personal_savings_amount),
+    profileRow('Health insurance', sn.health_insurance_cover ? 'Yes' : null),
+    profileRow('Provided by', sn.provided_by),
+    profileRow('If urgent', sn.would_rely_on_if_urgent),
+  ]);
+  const debtRows = (p.debt || []).map((d, i) => profileRow(`Debt ${i+1} (${d.type || '?'})`, d.balance ?? d.outstanding ?? d.amount));
+  const debt = profileSection('Debt', debtRows);
+  const creditSec = profileSection('Credit', [
+    profileRow('Cards', cr.cards != null ? String(cr.cards) : null),
+    profileRow('Limit', cr.total_limit),
+    profileRow('Utilisation', cr.typical_utilization_pct != null ? cr.typical_utilization_pct + '%' : null),
+  ]);
+  const goalsArr = Array.isArray(p.goals) ? p.goals : (p.goals && typeof p.goals === 'object' ? [p.goals] : []);
+  const goals = goalsArr.map((g, i) => profileRow(`Goal ${i+1}`, g.type));
+  const goalsSec = profileSection('Goals', goals);
+
+  const combined = [academic, moneyIn, expenses, safetyNet, debt, creditSec, goalsSec].join('');
+  document.getElementById('profile-content').innerHTML =
+    combined || '<p class="empty-profile">Profile fills in as you talk.</p>';
+}
+
+initSession().catch(() => {
+  document.getElementById('status-label').textContent = 'offline';
+});
 </script>
 </body>
 </html>
