@@ -1,614 +1,1489 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FinPal — financial dashboard</title>
-<meta name="description" content="Your monthly snapshot, expenses, emergency fund, debt, goals and projections — derived from your FinPal conversation.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FinPal — Budget &amp; Expense</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #F5F6FA;
+      --sidebar-bg:  #FFFFFF;
+      --card-bg:     #FFFFFF;
+      --border:      #ECEEF3;
+      --border2:     #F2F3F7;
+      --text:        #14181F;
+      --muted:       #8A93A6;
+      --muted2:      #B4BAC7;
+
+      --accent:       #2F6FED;
+      --accent-dark:  #1B4FC4;
+      --accent-light: #EAF1FF;
+
+      --green:        #22C55E;
+      --green-light:  #E9FBF0;
+      --red:          #EF4444;
+      --red-light:    #FEEBEC;
+      --amber:        #F59E0B;
+      --amber-light:  #FFF6E5;
+
+      --shadow: 0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.05);
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+
+      --ff: 'Plus Jakarta Sans', system-ui, sans-serif;
+    }
+
+    [data-theme="dark"] {
+      --bg:          #0E1015;
+      --sidebar-bg:  #14171D;
+      --card-bg:     #181B22;
+      --border:      #262A33;
+      --border2:     #20232B;
+      --text:        #EFF1F5;
+      --muted:       #8A93A6;
+      --muted2:      #5A6070;
+
+      --accent:       #F97316;
+      --accent-dark:  #C2570A;
+      --accent-light: rgba(249,115,22,0.14);
+
+      --green-light:  rgba(34,197,94,0.14);
+      --red-light:    rgba(239,68,68,0.14);
+      --amber-light:  rgba(245,158,11,0.14);
+
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 2px 8px rgba(0,0,0,.25);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--ff);
+      -webkit-font-smoothing: antialiased;
+      transition: background .2s, color .2s;
+    }
+
+    a { color: inherit; }
+    button { font-family: inherit; cursor: pointer; }
+
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    /* ═══════════════════════ SHELL ═══════════════════════ */
+    .shell {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ─── SIDEBAR ─── */
+    .sidebar {
+      width: 264px;
+      flex-shrink: 0;
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 22px 16px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .sb-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      padding: 0 8px 22px;
+    }
+    .sb-logo-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 20px;
+    }
+    .sb-logo-bars span {
+      display: block;
+      width: 4px;
+      border-radius: 2px;
+      background: var(--accent);
+    }
+    .sb-logo-bars span:nth-child(1) { height: 9px; }
+    .sb-logo-bars span:nth-child(2) { height: 16px; }
+    .sb-logo-bars span:nth-child(3) { height: 20px; }
+    .sb-logo-bars span:nth-child(4) { height: 12px; }
+    .sb-logo-bars span:nth-child(5) { height: 7px; }
+    .sb-logo-name { font-size: 1.05rem; font-weight: 800; color: var(--text); letter-spacing: -0.01em; }
+
+    .sb-user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      border-radius: var(--radius-md);
+      background: var(--bg);
+      margin-bottom: 18px;
+    }
+    .sb-avatar {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+    .sb-user-name { font-size: 0.85rem; font-weight: 700; }
+    .sb-user-sub  { font-size: 0.72rem; color: var(--muted); }
+
+    .sb-menu-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted2);
+      padding: 4px 10px 8px;
+    }
+
+    .sb-nav { display: flex; flex-direction: column; gap: 2px; margin-bottom: 20px; }
+    .sb-item {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 10px 10px;
+      border-radius: var(--radius-sm);
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 0.86rem;
+      font-weight: 600;
+      transition: background .15s, color .15s;
+      position: relative;
+    }
+    .sb-item:hover { background: var(--bg); color: var(--text); }
+    .sb-item.active { background: var(--accent-light); color: var(--accent); }
+    .sb-item.disabled { cursor: default; opacity: .55; }
+    .sb-item.disabled:hover { background: transparent; color: var(--muted); }
+    .sb-icon { width: 18px; text-align: center; flex-shrink: 0; font-size: 0.95rem; }
+    .sb-soon {
+      margin-left: auto;
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--muted2);
+      background: var(--border2);
+      padding: 2px 6px;
+      border-radius: 999px;
+    }
+
+    .sb-bottom { margin-top: auto; display: flex; flex-direction: column; gap: 2px; padding-top: 12px; border-top: 1px solid var(--border2); }
+
+    .sb-toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 10px;
+      font-size: 0.86rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .switch { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .switch-track {
+      position: absolute; inset: 0;
+      background: var(--border);
+      border-radius: 999px;
+      transition: background .2s;
+      cursor: pointer;
+    }
+    .switch-track::before {
+      content: '';
+      position: absolute;
+      width: 16px; height: 16px;
+      left: 2px; top: 2px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform .2s;
+      box-shadow: 0 1px 2px rgba(0,0,0,.2);
+    }
+    .switch input:checked + .switch-track { background: var(--accent); }
+    .switch input:checked + .switch-track::before { transform: translateX(16px); }
+
+    /* ═══════════════════════ MAIN ═══════════════════════ */
+    .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+    /* ─── TOPBAR ─── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 18px 32px;
+      border-bottom: 1px solid var(--border);
+      background: var(--card-bg);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .search-box {
+      flex: 1;
+      max-width: 360px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 9px 14px;
+    }
+    .search-box input {
+      border: none; background: transparent; outline: none;
+      font-family: inherit; font-size: 0.84rem; color: var(--text);
+      width: 100%;
+    }
+    .search-box input::placeholder { color: var(--muted2); }
+    .search-kbd {
+      font-size: 0.68rem;
+      color: var(--muted2);
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 5px;
+    }
+    .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+
+    .bell-btn {
+      position: relative;
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+    }
+    .bell-badge {
+      position: absolute;
+      top: -3px; right: -3px;
+      background: var(--red);
+      color: #fff;
+      font-size: 0.6rem;
+      font-weight: 700;
+      min-width: 16px; height: 16px;
+      border-radius: 999px;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 3px;
+      border: 2px solid var(--card-bg);
+    }
+
+    .phase-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 14px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text);
+      text-transform: capitalize;
+    }
+    .phase-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+
+    /* ─── CONTENT ─── */
+    .content { max-width: 1360px; padding: 28px 32px 56px; width: 100%; margin: 0 auto; }
+
+    .page-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 22px;
+      flex-wrap: wrap;
+    }
+    .page-title { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.01em; }
+    .page-sub { font-size: 0.84rem; color: var(--muted); margin-top: 4px; }
+    .page-actions { display: flex; gap: 10px; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 10px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      font-weight: 700;
+      border: 1px solid transparent;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-dark); }
+    .btn-outline { background: var(--card-bg); color: var(--accent); border-color: var(--accent-light); }
+    .btn-outline:hover { background: var(--accent-light); }
+    .btn-ghost { background: var(--bg); color: var(--text); border-color: var(--border); }
+    .btn-ghost:hover { background: var(--border2); }
+    .btn-sm { padding: 7px 12px; font-size: 0.74rem; }
+    .btn-full { width: 100%; justify-content: center; }
+
+    /* ─── CARD BASE ─── */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+    .card-title {
+      font-size: 0.88rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .card-icon-link {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+    }
+
+    /* ─── TOP ROW: budget stack + chart ─── */
+    .top-row {
+      display: grid;
+      grid-template-columns: 1.15fr 1.5fr;
+      gap: 16px;
+      margin-bottom: 16px;
+      align-items: stretch;
+    }
+    .budget-stack { display: flex; flex-direction: column; gap: 16px; }
+
+    .stat-hero {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      flex: 1;
+    }
+    .stat-hero-top { display: flex; align-items: flex-start; justify-content: space-between; }
+    .stat-label { font-size: 0.78rem; color: var(--muted); font-weight: 600; display:flex; align-items:center; gap:6px; }
+    .stat-value-lg { font-size: 2.1rem; font-weight: 800; letter-spacing: -0.02em; }
+    .stat-change {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 2px 8px 2px 6px;
+      border-radius: 999px;
+    }
+    .stat-change.up   { background: var(--green-light); color: var(--green); }
+    .stat-change.down { background: var(--red-light);   color: var(--red); }
+    .stat-hero-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .stat-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .stat-small { display: flex; flex-direction: column; gap: 10px; }
+    .stat-value-md { font-size: 1.55rem; font-weight: 800; letter-spacing: -0.01em; }
+    .stat-sub { font-size: 0.74rem; color: var(--muted); }
+
+    .chart-card { display: flex; flex-direction: column; gap: 14px; }
+    .chart-head { display: flex; align-items: center; justify-content: space-between; }
+    .chart-wrap { position: relative; flex: 1; min-height: 190px; }
+
+    .pie-card { margin-bottom: 16px; }
+    .pie-body { display: flex; align-items: center; gap: 32px; flex-wrap: wrap; }
+    .pie-canvas-wrap { position: relative; width: 250px; height: 250px; flex: 0 0 250px; }
+    .pie-tooltip {
+      position: absolute; display: none; pointer-events: none; z-index: 10;
+      background: var(--text); color: var(--card-bg);
+      font-size: 0.72rem; line-height: 1.5; font-weight: 600;
+      padding: 6px 10px; border-radius: 8px; white-space: nowrap;
+      box-shadow: var(--shadow);
+    }
+    .pie-legend { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 10px; }
+    .pie-legend-row { display: flex; align-items: center; gap: 10px; font-size: 0.82rem; }
+    .pie-legend-swatch { width: 10px; height: 10px; border-radius: 3px; flex: 0 0 10px; }
+    .pie-legend-label { flex: 1; color: var(--text); font-weight: 600; }
+    .pie-legend-pct { color: var(--muted); font-weight: 700; }
+    .pie-legend-amt { color: var(--muted); font-size: 0.76rem; min-width: 78px; text-align: right; }
+
+    /* ─── MID ROW: expense + fixed/variable + AI insight ─── */
+    .mid-row {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr 1fr 1.3fr;
+      gap: 16px;
+      margin-bottom: 16px;
+      align-items: stretch;
+    }
+
+    .expense-list { display: flex; flex-direction: column; gap: 14px; margin-top: 6px; }
+    .exp-row { display: flex; flex-direction: column; gap: 6px; }
+    .exp-row-head { display: flex; align-items: center; justify-content: space-between; }
+    .exp-icon-label { display: flex; align-items: center; gap: 9px; }
+    .exp-icon {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+    .exp-name { font-size: 0.82rem; font-weight: 600; }
+    .exp-nums { display: flex; align-items: baseline; gap: 6px; }
+    .exp-amount { font-size: 0.82rem; font-weight: 700; }
+    .exp-pct-badge { font-size: 0.68rem; font-weight: 700; padding: 1px 7px; border-radius: 999px; }
+    .exp-pct-badge.over  { background: var(--red-light);   color: var(--red); }
+    .exp-pct-badge.under { background: var(--green-light); color: var(--green); }
+    .exp-track { height: 6px; background: var(--bg); border-radius: 99px; overflow: hidden; }
+    .exp-fill { height: 100%; border-radius: 99px; }
+    .exp-actual-label { font-size: 0.68rem; color: var(--muted2); }
+
+    .fixvar-card { display: flex; flex-direction: column; gap: 12px; justify-content: space-between; }
+    .fixvar-icon {
+      width: 34px; height: 34px;
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      margin-bottom: 2px;
+    }
+
+    .ai-insight-card {
+      background: linear-gradient(160deg, var(--accent) 0%, var(--accent-dark) 100%);
+      color: #fff;
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: var(--shadow);
+    }
+    .ai-insight-icon {
+      width: 32px; height: 32px;
+      border-radius: 9px;
+      background: rgba(255,255,255,0.18);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+    }
+    .ai-insight-title { font-size: 0.8rem; font-weight: 700; }
+    .ai-insight-body { font-size: 0.78rem; line-height: 1.5; opacity: 0.94; flex: 1; }
+    .ai-insight-btn {
+      align-self: flex-start;
+      background: #fff;
+      color: var(--accent-dark);
+      border: none;
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 0.76rem;
+      font-weight: 700;
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    /* ─── TABLE ─── */
+    .table-card { margin-bottom: 16px; }
+    .table-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    table.budget-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    table.budget-table th {
+      text-align: left;
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      padding: 0 10px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    table.budget-table td {
+      padding: 13px 10px;
+      border-bottom: 1px solid var(--border2);
+      font-weight: 600;
+    }
+    table.budget-table tr:last-child td { border-bottom: none; }
+    .table-cat { display: flex; align-items: center; gap: 10px; }
+    .status-pill { font-size: 0.68rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; }
+    .status-pill.over  { background: var(--red-light);   color: var(--red); }
+    .status-pill.under { background: var(--green-light); color: var(--green); }
+    .status-pill.tight { background: var(--amber-light); color: var(--amber); }
+    .muted-cell { color: var(--muted); font-weight: 500; }
+
+    /* ─── BOTTOM ROW: projection + recs ─── */
+    .bottom-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .proj-canvas-wrap { position: relative; height: 160px; }
+    canvas.proj-chart { width: 100%; height: 100%; }
+    .proj-summary { display: flex; gap: 20px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border2); }
+    .proj-stat { flex: 1; }
+    .proj-stat-label { font-size: 0.7rem; color: var(--muted); margin-bottom: 4px; }
+    .proj-stat-value { font-size: 1.05rem; font-weight: 800; }
+
+    .rec-list { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
+    .rec-item { display: flex; align-items: flex-start; gap: 10px; padding: 11px 13px; background: var(--bg); border-radius: var(--radius-sm); border-left: 3px solid transparent; }
+    .rec-item.critical { border-color: var(--red); }
+    .rec-item.warning  { border-color: var(--amber); }
+    .rec-item.good     { border-color: var(--green); }
+    .rec-item.info     { border-color: var(--accent); }
+    .rec-icon { font-size: 0.95rem; flex-shrink: 0; margin-top: 1px; }
+    .rec-text { font-size: 0.78rem; line-height: 1.45; }
+    .rec-text strong { font-weight: 700; }
+
+    /* ─── GOALS ─── */
+    #goals-section { scroll-margin-top: 84px; }
+    .goals-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-top: 6px; }
+    .goal-card { background: var(--bg); border-radius: var(--radius-sm); padding: 14px; border: 1px solid var(--border2); }
+    .goal-name { font-size: 0.82rem; font-weight: 700; margin-bottom: 4px; text-transform: capitalize; }
+    .goal-amt { font-size: 0.72rem; color: var(--muted); }
+
+    /* ─── EMPTY / SKELETON ─── */
+    .empty-state { text-align: center; padding: 32px 16px; color: var(--muted); }
+    .empty-state-icon { font-size: 2rem; margin-bottom: 10px; opacity: 0.6; }
+    .empty-state-title { font-size: 0.95rem; font-weight: 700; color: var(--text); margin-bottom: 5px; }
+    .empty-state-body { font-size: 0.8rem; }
+    .skeleton {
+      background: linear-gradient(90deg, var(--border2) 0%, var(--border) 50%, var(--border2) 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 8px;
+    }
+    @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+    .disclaimer { text-align: center; font-size: 0.7rem; color: var(--muted2); margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border2); }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 1180px) {
+      .top-row { grid-template-columns: 1fr; }
+      .mid-row { grid-template-columns: 1fr 1fr; }
+      .bottom-row { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .content { padding: 20px 16px 40px; }
+      .stat-pair { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .mid-row { grid-template-columns: 1fr; }
+      .topbar { padding: 14px 16px; }
+      .search-box { display: none; }
+    }
+  </style>
 </head>
 <body>
 
-<header class="site-header">
-  <div class="wrap">
-    <a class="brand" href="index.html">Fin<span>Pal</span></a>
-    <nav class="nav" aria-label="Primary">
-      <a class="btn small secondary" id="home-link" href="index.html">Home</a>
-      <a class="btn small" id="advisor-link" href="app.html">Back to the advisor</a>
+<div class="shell">
+
+  <!-- ═══════════════ SIDEBAR ═══════════════ -->
+  <aside class="sidebar">
+    <a href="index.html" class="sb-logo">
+      <div class="sb-logo-bars"><span></span><span></span><span></span><span></span><span></span></div>
+      <span class="sb-logo-name">FinPal</span>
+    </a>
+
+    <div class="sb-user">
+      <div class="sb-avatar">FP</div>
+      <div>
+        <div class="sb-user-name">Your Session</div>
+        <div class="sb-user-sub">Personal Account</div>
+      </div>
+    </div>
+
+    <div class="sb-menu-label">Menu</div>
+    <nav class="sb-nav">
+      <a href="#" class="sb-item disabled" title="Coming soon"><span class="sb-icon">&#9635;</span>Dashboard<span class="sb-soon">Soon</span></a>
+      <a href="#" id="nav-chat" class="sb-item"><span class="sb-icon">&#128172;</span>AI Financial Insights</a>
+      <a href="#" class="sb-item disabled" title="Coming soon"><span class="sb-icon">&#8644;</span>Transactions<span class="sb-soon">Soon</span></a>
+      <a href="#" class="sb-item active"><span class="sb-icon">&#128176;</span>Budget &amp; Expense</a>
+      <a href="#" class="sb-item disabled" title="Coming soon"><span class="sb-icon">&#128200;</span>Investment<span class="sb-soon">Soon</span></a>
+      <a href="#" class="sb-item disabled" title="Coming soon"><span class="sb-icon">&#128196;</span>Invoices<span class="sb-soon">Soon</span></a>
+      <a href="#goals-section" class="sb-item"><span class="sb-icon">&#127919;</span>Goals &amp; Savings</a>
     </nav>
-  </div>
-</header>
 
-<main class="section">
-  <div class="wrap stack">
-
-    <span class="eyebrow" id="phase-badge">Loading</span>
-    <h1>Your monthly snapshot</h1>
-    <p class="lede" id="page-lede">Reading the profile from your conversation…</p>
-
-    <!-- Status / no-session notice -->
-    <div id="page-status" class="notice" role="status" aria-live="polite">
-      <p class="empty">Loading your dashboard…</p>
+    <div class="sb-bottom">
+      <a href="#" class="sb-item disabled"><span class="sb-icon">&#10067;</span>Help Center</a>
+      <a href="#" class="sb-item disabled"><span class="sb-icon">&#9881;</span>Settings</a>
+      <div class="sb-toggle-row">
+        <span><span class="sb-icon">&#127769;</span>Dark Mode</span>
+        <label class="switch">
+          <input type="checkbox" id="dark-toggle" />
+          <span class="switch-track"></span>
+        </label>
+      </div>
+      <a href="index.html" id="nav-logout" class="sb-item"><span class="sb-icon">&#8630;</span>Logout</a>
     </div>
+  </aside>
 
-    <!-- Everything below is filled in by script -->
-    <div id="dashboard" class="stack hidden" style="width:100%">
+  <!-- ═══════════════ MAIN ═══════════════ -->
+  <div class="main">
 
-      <section class="snapshot" aria-labelledby="snapshot-title">
-        <h2 id="snapshot-title" class="small"
-            style="font-family:'Manrope',sans-serif;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-muted);font-size:12px;">
-          This month
-        </h2>
-        <div class="snapshot-grid mt" id="snapshot-grid"></div>
-      </section>
-
-      <section class="card" style="width:100%" aria-labelledby="budget-title">
-        <h2 id="budget-title">Budget split</h2>
-        <p class="small muted">Guideline: 50% needs · 30% wants · 20% saved or repaid.</p>
-        <div class="mt" id="budget-bars"></div>
-      </section>
-
-      <div class="bento two" style="width:100%">
-        <section class="card" aria-labelledby="expenses-title">
-          <h2 id="expenses-title">Where it goes</h2>
-          <div class="mt" id="expense-columns"></div>
-          <div class="rows mt" id="expense-rows"></div>
-        </section>
-
-        <section class="card" aria-labelledby="ef-title">
-          <h2 id="ef-title">Emergency fund</h2>
-          <div class="mt" id="ef-body"></div>
-        </section>
+    <!-- ─── TOPBAR ─── -->
+    <div class="topbar">
+      <div class="search-box">
+        <span>&#128269;</span>
+        <input type="text" id="search-input" placeholder="Search your plan..." />
+        <span class="search-kbd">&crarr;</span>
       </div>
-
-      <div class="bento two" style="width:100%">
-        <section class="card" aria-labelledby="debt-title">
-          <h2 id="debt-title">Debt &amp; credit</h2>
-          <div class="mt" id="debt-body"></div>
-        </section>
-
-        <section class="card" aria-labelledby="goals-title">
-          <h2 id="goals-title">Goals</h2>
-          <div class="mt" id="goals-body"></div>
-        </section>
-      </div>
-
-      <section class="card" style="width:100%" aria-labelledby="projection-title">
-        <h2 id="projection-title">If you invest the surplus</h2>
-        <div class="mt" id="projection-body"></div>
-      </section>
-
-      <section class="card" style="width:100%" aria-labelledby="recs-title">
-        <h2 id="recs-title">What to do next</h2>
-        <ul class="tips mt" id="recommendations"></ul>
-      </section>
-
-      <div class="btn-row">
-        <a class="btn" id="continue-link" href="app.html">Continue the conversation</a>
+      <div class="topbar-right">
+        <button class="bell-btn" id="bell-btn" title="Priority actions">
+          &#128276;
+          <span class="bell-badge" id="bell-badge" hidden>0</span>
+        </button>
+        <div class="phase-chip"><span class="phase-dot"></span><span id="phase-text">—</span></div>
       </div>
     </div>
 
-    <p class="small muted lede">
-      Figures are derived from what you told FinPal. They are educational estimates, not licensed financial advice.
-    </p>
-  </div>
-</main>
+    <!-- ─── CONTENT ─── -->
+    <div class="content">
 
-<footer class="site-footer">
-  <div class="wrap"><p class="small">FinPal · Deterministic calculations, plain answers</p></div>
-</footer>
+      <div class="page-header">
+        <div>
+          <div class="page-title">Budget &amp; Expense</div>
+          <div class="page-sub" id="page-sub">Your financial snapshot, built from your conversation with FinPal.</div>
+        </div>
+        <div class="page-actions">
+          <a href="#" id="btn-ask-ai" class="btn btn-outline">&#10024; Ask FinPal AI</a>
+          <button class="btn btn-primary" id="btn-export">&#11015; Export Report</button>
+        </div>
+      </div>
 
-<script src="api.js"></script>
+      <!-- TOP ROW -->
+      <div class="top-row" id="top-row">
+        <div class="budget-stack">
+          <div class="card stat-hero">
+            <div class="stat-hero-top">
+              <div>
+                <div class="stat-label">&#128176; Total Budget this Month</div>
+                <div class="stat-value-lg" id="stat-income">—</div>
+              </div>
+              <span class="stat-change up" id="income-change">—</span>
+            </div>
+            <div class="stat-hero-actions">
+              <a href="#" id="btn-set-budget" class="btn btn-primary btn-sm">+ Set New Budget</a>
+              <a href="#priorities-anchor" class="btn btn-outline btn-sm">&#8635; Auto-Optimize Budget</a>
+            </div>
+          </div>
+          <div class="stat-pair">
+            <div class="card stat-small">
+              <div class="stat-label">&#8593; Spent So Far</div>
+              <div class="stat-value-md" id="stat-spent">—</div>
+              <div class="stat-sub" id="stat-spent-sub">—</div>
+            </div>
+            <div class="card stat-small">
+              <div class="stat-label">&#8601; Remaining Budget</div>
+              <div class="stat-value-md" id="stat-remaining">—</div>
+              <div class="stat-sub" id="stat-remaining-sub">—</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card chart-card">
+          <div class="chart-head">
+            <div class="card-title" style="margin-bottom:0">Spending by Category</div>
+          </div>
+          <div class="chart-wrap"><canvas id="cat-chart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- INCOME ALLOCATION PIE -->
+      <div class="card chart-card pie-card" id="pie-card">
+        <div class="chart-head">
+          <div class="card-title" style="margin-bottom:0">Income Allocation</div>
+        </div>
+        <div class="pie-body">
+          <div class="pie-canvas-wrap">
+            <canvas id="pie-chart"></canvas>
+            <div class="pie-tooltip" id="pie-tooltip"></div>
+          </div>
+          <div class="pie-legend" id="pie-legend"></div>
+        </div>
+      </div>
+
+      <!-- MID ROW -->
+      <div class="mid-row" id="mid-row">
+        <div class="card">
+          <div class="card-title">Expense Breakdown</div>
+          <div class="expense-list" id="expense-list">
+            <div class="skeleton" style="height:44px;margin-bottom:10px"></div>
+            <div class="skeleton" style="height:44px;margin-bottom:10px"></div>
+            <div class="skeleton" style="height:44px"></div>
+          </div>
+        </div>
+
+        <div class="card fixvar-card">
+          <div>
+            <div class="fixvar-icon" style="background:var(--accent-light);color:var(--accent)">&#128274;</div>
+            <div class="stat-label">Fixed Expenses</div>
+            <div class="stat-value-md" id="stat-fixed">—</div>
+          </div>
+          <div class="stat-sub" id="stat-fixed-sub">—</div>
+        </div>
+
+        <div class="card fixvar-card">
+          <div>
+            <div class="fixvar-icon" style="background:var(--amber-light);color:var(--amber)">&#128257;</div>
+            <div class="stat-label">Variable Expenses</div>
+            <div class="stat-value-md" id="stat-variable">—</div>
+          </div>
+          <div class="stat-sub" id="stat-variable-sub">—</div>
+        </div>
+
+        <div class="ai-insight-card" id="ai-insight-card">
+          <div class="ai-insight-icon">&#129504;</div>
+          <div class="ai-insight-title">AI Insight</div>
+          <div class="ai-insight-body" id="ai-insight-body">Loading your insight...</div>
+          <button class="ai-insight-btn" id="ai-insight-btn">Set Spending Limit &rarr;</button>
+        </div>
+      </div>
+
+      <!-- TABLE -->
+      <div class="card table-card" id="priorities-anchor">
+        <div class="table-head">
+          <div class="card-title" style="margin-bottom:0">Category Budget Breakdown</div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="budget-table" id="budget-table">
+            <thead>
+              <tr><th>Category</th><th>Guideline</th><th>Actual</th><th>Variance</th><th>Status</th></tr>
+            </thead>
+            <tbody id="budget-table-body">
+              <tr><td colspan="5"><div class="skeleton" style="height:20px"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- BOTTOM ROW -->
+      <div class="bottom-row">
+        <div class="card">
+          <div class="card-title">Savings Projection to Graduation</div>
+          <div class="proj-canvas-wrap"><canvas id="proj-canvas"></canvas></div>
+          <div class="proj-summary" id="proj-summary">
+            <div class="proj-stat"><div class="proj-stat-label">Starting Monthly SIP</div><div class="proj-stat-value" id="proj-sip" style="color:var(--green)">—</div></div>
+            <div class="proj-stat"><div class="proj-stat-label">By Graduation</div><div class="proj-stat-value" id="proj-corpus" style="color:var(--accent)">—</div></div>
+            <div class="proj-stat"><div class="proj-stat-label">Assumed Return</div><div class="proj-stat-value">12% p.a.</div></div>
+          </div>
+        </div>
+
+        <div class="card" id="priority-list-card">
+          <div class="card-title">Priority Actions</div>
+          <div class="rec-list" id="priority-list">
+            <div class="skeleton" style="height:50px;margin-bottom:8px"></div>
+            <div class="skeleton" style="height:50px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GOALS -->
+      <div class="card" id="goals-section" style="margin-bottom:16px">
+        <div class="card-title">Goals &amp; Savings</div>
+        <div class="goals-grid" id="goals-grid">
+          <div class="empty-state" style="grid-column:1/-1;padding:20px">
+            <div class="empty-state-body">Share a money goal with FinPal in chat to see it tracked here.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="disclaimer">
+        All figures are estimates based on information shared during your conversation. This is educational guidance — not personalised financial advice.
+        Returns shown (12% p.a.) are historical index fund averages and are not guaranteed. · FinPal
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /shell -->
+
 <script>
-(function () {
-  'use strict';
-  var F = window.FinPal;
-  var INR = F.inr, PCT = F.pct, clamp = F.clamp;
+/* ═══════════════════════════════════════════════
+   UTILITIES
+═══════════════════════════════════════════════ */
+const INR = n => n == null || isNaN(n) ? '—' : '₹' + Math.round(n).toLocaleString('en-IN');
+const PCT = (a, b) => b > 0 ? Math.round(a / b * 100) : 0;
+const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
+const qs = s => document.querySelector(s);
 
-  var statusBox = document.getElementById('page-status');
-  var dash      = document.getElementById('dashboard');
+function getSessionId() {
+  const p = new URLSearchParams(location.search);
+  return p.get('session') || p.get('sid');
+}
 
-  /* ---------------- small DOM helpers ---------------- */
-  function el(tag, className, text) {
-    var n = document.createElement(tag);
-    if (className) n.className = className;
-    if (text != null) n.textContent = text;
-    return n;
+/* ─── THEME ─── */
+function initTheme() {
+  const saved = localStorage.getItem('finpal-theme');
+  const toggle = qs('#dark-toggle');
+  if (saved === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    toggle.checked = true;
   }
-  function metric(label, value, note, tone) {
-    var box = el('div', 'metric');
-    box.appendChild(el('span', 'metric-label', label));
-    box.appendChild(el('span', 'metric-value' + (tone ? ' ' + tone : ''), value));
-    if (note) box.appendChild(el('span', 'metric-note', note));
-    return box;
-  }
-  function emptyNote(text) { return el('p', 'empty', text); }
-
-  function showStatus(title, body, tone) {
-    statusBox.className = 'notice' + (tone ? ' ' + tone : '');
-    statusBox.innerHTML = '';
-    statusBox.appendChild(el('h2', null, title));
-    statusBox.appendChild(el('p', 'empty', body));
-    var row = el('div', 'btn-row mt');
-    var a = el('a', 'btn', 'Start a conversation');
-    a.href = 'app.html';
-    row.appendChild(a);
-    statusBox.appendChild(row);
-    statusBox.classList.remove('hidden');
-    dash.classList.add('hidden');
-  }
-
-  /* ---------------- derive figures from the profile ---------------- */
-  function derive(p) {
-    var money  = p.money_in   || {};
-    var exp    = p.expenses   || {};
-    var safety = p.safety_net || {};
-    var bnpl   = exp.bnpl_usage || {};
-    var acad   = p.academic   || {};
-
-    var num = function (v) { var n = Number(v); return isNaN(n) ? 0 : n; };
-
-    var income = num(money.family_support_amount) +
-                 num(money.gig_income_amount) +
-                 num(money.scholarship_stipend_amount);
-
-    var housing = exp.housing ? num(exp.housing.amount) : 0;
-    var commute = exp.commute ? num(exp.commute.amount) : 0;
-    var food    = num(exp.food_beyond_mess);
-    var shared  = num(exp.split_shared_expenses);
-    var discr   = num(exp.discretionary);
-    var bnplAmt = num(bnpl.typical_monthly_amount);
-
-    var subs = Array.isArray(exp.subscriptions)
-      ? exp.subscriptions.reduce(function (a, s) { return a + num(s && s.monthly_cost); }, 0)
-      : num(exp.subscriptions);
-
-    var needs   = housing + commute + food + shared;
-    var wants   = subs + discr + bnplAmt;
-    var totalEx = needs + wants;
-    var surplus = income - totalEx;
-
-    var savings    = num(safety.personal_savings_amount);
-    var essentials = needs > 0 ? needs : income * 0.5;
-    var efMonths   = essentials > 0 ? savings / essentials : 0;
-
-    var stability = String(money.income_stability || '');
-    var efTarget  = stability.indexOf('gig') > -1 ? 12
-                  : stability.indexOf('fixed') > -1 ? 3 : 6;
-
-    var apps   = Array.isArray(bnpl.apps_used) ? bnpl.apps_used : [];
-    var missed = !!bnpl.missed_or_min_only;
-    var score  = 0;
-    if (missed) score += 2;
-    if (apps.length >= 2) score += 1;
-    if (income > 0 && bnplAmt / income > 0.15) score += 1;
-
-    var debts = Array.isArray(p.debt) ? p.debt : [];
-    var goals = Array.isArray(p.goals) ? p.goals : [];
-    var credit = p.credit || {};
-
-    var now = new Date();
-    var gradYear = num(acad.expected_graduation_year) || (now.getFullYear() + 2);
-    var monthsToGrad = Math.max(1, (gradYear - now.getFullYear()) * 12 - now.getMonth());
-    var sip = Math.max(0, Math.round(Math.max(0, surplus) * 0.5));
-    var r = 0.01; // 12% p.a., compounded monthly
-    var corpus = sip > 0
-      ? Math.round(sip * ((Math.pow(1 + r, monthsToGrad) - 1) / r) * (1 + r))
-      : 0;
-
-    return {
-      income: income, housing: housing, commute: commute, food: food, shared: shared,
-      discr: discr, bnplAmt: bnplAmt, subs: subs,
-      needs: needs, wants: wants, totalEx: totalEx, surplus: surplus,
-      saved: Math.max(0, surplus),
-      tNeeds: income * 0.5, tWants: income * 0.3, tSaved: income * 0.2,
-      savings: savings, essentials: essentials, efMonths: efMonths, efTarget: efTarget,
-      efGap: Math.max(0, essentials * efTarget - savings),
-      apps: apps, missed: missed,
-      bnplRisk: ['low', 'moderate', 'high', 'critical'][Math.min(score, 3)],
-      debts: debts, goals: goals, credit: credit,
-      hasInsurance: !!(safety.health_insurance_cover &&
-                       String(safety.health_insurance_cover).toLowerCase() !== 'none'),
-      gradYear: gradYear, monthsToGrad: monthsToGrad, sip: sip, corpus: corpus,
-      contributed: sip * monthsToGrad,
-      phase: p.conversation_phase || 'rapport'
-    };
-  }
-
-  /* ---------------- sections ---------------- */
-  function renderSnapshot(d) {
-    var grid = document.getElementById('snapshot-grid');
-    grid.innerHTML = '';
-
-    grid.appendChild(metric('Money in', d.income > 0 ? INR(d.income) : '—',
-      d.income > 0 ? 'Per month, all sources' : 'Tell FinPal what comes in'));
-
-    grid.appendChild(metric('Money out', d.totalEx > 0 ? INR(d.totalEx) : '—',
-      d.income > 0 && d.totalEx > 0 ? PCT(d.totalEx, d.income) + '% of money in' : 'Tell FinPal what goes out',
-      d.income > 0 && PCT(d.totalEx, d.income) > 90 ? 'bad'
-        : d.income > 0 && PCT(d.totalEx, d.income) > 75 ? 'warn' : ''));
-
-    grid.appendChild(metric(d.surplus < 0 ? 'Short each month' : 'Left over',
-      d.income > 0 ? INR(Math.abs(d.surplus)) : '—',
-      d.surplus < 0 ? 'Spending is above income' : 'Before anything is saved',
-      d.surplus < 0 ? 'bad' : 'good'));
-
-    grid.appendChild(metric('Safety net',
-      d.savings > 0 ? d.efMonths.toFixed(1) + ' mo' : '—',
-      d.savings > 0 ? 'Target: ' + d.efTarget + ' months' : 'Share your savings with FinPal',
-      d.savings <= 0 ? '' : d.efMonths >= d.efTarget ? 'good'
-        : d.efMonths >= d.efTarget / 2 ? 'warn' : 'bad'));
-  }
-
-  function bar(label, actual, target, income, targetPct, fillClass) {
-    var row = el('div', 'bar-row');
-    var head = el('div', 'bar-head');
-    head.appendChild(el('span', 'bar-label', label));
-    head.appendChild(el('span', 'bar-nums', INR(actual) + ' / ' + INR(target)));
-    row.appendChild(head);
-
-    var track = el('div', 'bar-track');
-    var over  = actual > target * 1.05;
-    var fill  = el('div', 'bar-fill ' + (over ? 'warn' : (fillClass || '')));
-    fill.style.width = clamp(PCT(actual, income), 0, 100) + '%';
-    track.appendChild(fill);
-    var line = el('div', 'bar-target');
-    line.style.left = targetPct + '%';
-    track.appendChild(line);
-    row.appendChild(track);
-
-    row.appendChild(el('span', 'bar-status', over
-      ? PCT(actual, income) + '% — ' + INR(actual - target) + ' above the guideline'
-      : PCT(actual, income) + '% — within the guideline'));
-    return row;
-  }
-
-  function renderBudget(d) {
-    var box = document.getElementById('budget-bars');
-    box.innerHTML = '';
-    if (d.income <= 0) {
-      box.appendChild(emptyNote('Share what comes in each month and this fills in.'));
-      return;
-    }
-    box.appendChild(bar('Needs — housing, commute, food', d.needs, d.tNeeds, d.income, 50, ''));
-    box.appendChild(bar('Wants — subscriptions, BNPL, discretionary', d.wants, d.tWants, d.income, 30, ''));
-    box.appendChild(bar('Saved or repaid', d.saved, d.tSaved, d.income, 20, 'mint'));
-  }
-
-  function renderExpenses(d) {
-    var cols = document.getElementById('expense-columns');
-    var rows = document.getElementById('expense-rows');
-    cols.innerHTML = '';
-    rows.innerHTML = '';
-
-    var cats = [
-      { label: 'Housing',       amount: d.housing },
-      { label: 'Commute',       amount: d.commute },
-      { label: 'Food',          amount: d.food },
-      { label: 'Shared',        amount: d.shared },
-      { label: 'Subscriptions', amount: d.subs },
-      { label: 'BNPL',          amount: d.bnplAmt, flag: true },
-      { label: 'Other',         amount: d.discr }
-    ].filter(function (c) { return c.amount > 0; });
-
-    if (!cats.length) {
-      rows.appendChild(emptyNote('No expenses recorded yet — tell FinPal where the money goes.'));
-      return;
-    }
-
-    var max = cats.reduce(function (m, c) { return Math.max(m, c.amount); }, 0);
-
-    var chart = el('div', 'columns');
-    chart.setAttribute('role', 'img');
-    chart.setAttribute('aria-label', 'Monthly spending by category: ' +
-      cats.map(function (c) { return c.label + ' ' + INR(c.amount); }).join(', '));
-    cats.forEach(function (c) {
-      var col = el('div', 'column');
-      col.appendChild(el('span', 'column-val', INR(c.amount)));
-      var b = el('div', 'column-bar' + (c.flag ? '' : ' mint'));
-      b.style.height = Math.max(4, Math.round((c.amount / max) * 100)) + '%';
-      col.appendChild(b);
-      col.appendChild(el('span', 'column-cap', c.label));
-      chart.appendChild(col);
-    });
-    cols.appendChild(chart);
-
-    cats.forEach(function (c) {
-      var row = el('div', 'row');
-      row.appendChild(el('span', 'row-label', c.label));
-      row.appendChild(el('strong', null, INR(c.amount)));
-      if (d.income > 0) row.appendChild(el('span', 'badge', PCT(c.amount, d.income) + '% of income'));
-      rows.appendChild(row);
-    });
-  }
-
-  function renderEmergencyFund(d) {
-    var box = document.getElementById('ef-body');
-    box.innerHTML = '';
-
-    if (d.savings <= 0 && d.essentials <= 0) {
-      box.appendChild(emptyNote('Share your savings and essential spend to size a cushion.'));
-      return;
-    }
-
-    box.appendChild(metric('Saved so far', INR(d.savings),
-      d.essentials > 0 ? 'Covers ' + d.efMonths.toFixed(1) + ' months of essentials' : null,
-      d.efMonths >= d.efTarget ? 'good' : d.efMonths >= d.efTarget / 2 ? 'warn' : 'bad'));
-
-    var target = d.essentials * d.efTarget;
-    var track = el('div', 'bar-track');
-    track.style.marginTop = '14px';
-    var fill = el('div', 'bar-fill mint');
-    fill.style.width = clamp(PCT(d.savings, target), 0, 100) + '%';
-    track.appendChild(fill);
-    box.appendChild(track);
-    box.appendChild(el('span', 'bar-status',
-      INR(d.savings) + ' of a ' + INR(target) + ' target (' + d.efTarget + ' months)'));
-
-    if (d.efGap > 0) {
-      var note = el('p', 'small mt-s',
-        'Still ' + INR(d.efGap) + ' short' +
-        (d.saved > 0 ? ' — about ' + Math.ceil(d.efGap / d.saved) + ' months at your current surplus.' : '.'));
-      box.appendChild(note);
-    }
-
-    var cover = el('p', 'small mt-s');
-    cover.appendChild(el('span', 'badge ' + (d.hasInsurance ? 'good' : 'warn'),
-      d.hasInsurance ? 'Health cover in place' : 'No health cover recorded'));
-    box.appendChild(cover);
-  }
-
-  function renderDebt(d) {
-    var box = document.getElementById('debt-body');
-    box.innerHTML = '';
-
-    var riskTone = d.bnplRisk === 'low' ? 'good' : d.bnplRisk === 'moderate' ? 'warn' : 'bad';
-    var risk = el('p', null);
-    risk.appendChild(el('span', 'badge ' + riskTone, 'BNPL risk: ' + d.bnplRisk));
-    box.appendChild(risk);
-
-    if (d.bnplAmt > 0 || d.apps.length) {
-      box.appendChild(el('p', 'small muted',
-        (d.apps.length ? d.apps.length + ' pay-later app' + (d.apps.length > 1 ? 's' : '') : 'Pay-later use') +
-        ' at ' + INR(d.bnplAmt) + ' a month' +
-        (d.missed ? ' · a payment has been missed or paid as minimum only' : '')));
-    }
-
-    if (d.debts.length) {
-      var rows = el('div', 'rows mt');
-      d.debts.forEach(function (item) {
-        var row = el('div', 'row');
-        row.appendChild(el('span', 'row-label', F.titleise(item.type || item.name || 'Debt')));
-        if (item.amount != null || item.outstanding != null) {
-          row.appendChild(el('strong', null, INR(item.amount != null ? item.amount : item.outstanding)));
-        }
-        if (item.apr != null || item.interest_rate != null) {
-          var apr = item.apr != null ? item.apr : item.interest_rate;
-          row.appendChild(el('span', 'badge ' + (Number(apr) > 15 ? 'bad' : ''), apr + '% p.a.'));
-        }
-        rows.appendChild(row);
-      });
-      box.appendChild(rows);
+  toggle.addEventListener('change', () => {
+    if (toggle.checked) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      localStorage.setItem('finpal-theme', 'dark');
     } else {
-      box.appendChild(el('p', 'small muted mt-s', 'No loans or borrowings recorded.'));
+      document.documentElement.removeAttribute('data-theme');
+      localStorage.setItem('finpal-theme', 'light');
     }
+  });
+}
 
-    if (d.credit.cards || d.credit.total_limit != null || d.credit.typical_utilization_pct != null) {
-      var c = el('div', 'rows mt');
-      if (d.credit.cards != null) {
-        var r1 = el('div', 'row');
-        r1.appendChild(el('span', 'row-label', 'Credit cards'));
-        r1.appendChild(el('strong', null, String(d.credit.cards)));
-        c.appendChild(r1);
-      }
-      if (d.credit.total_limit != null) {
-        var r2 = el('div', 'row');
-        r2.appendChild(el('span', 'row-label', 'Total limit'));
-        r2.appendChild(el('strong', null, INR(d.credit.total_limit)));
-        c.appendChild(r2);
-      }
-      if (d.credit.typical_utilization_pct != null) {
-        var util = Number(d.credit.typical_utilization_pct);
-        var r3 = el('div', 'row');
-        r3.appendChild(el('span', 'row-label', 'Typical utilisation'));
-        r3.appendChild(el('strong', null, util + '%'));
-        r3.appendChild(el('span', 'badge ' + (util > 30 ? 'warn' : 'good'),
-          util > 30 ? 'Above 30%' : 'Healthy'));
-        c.appendChild(r3);
-      }
-      box.appendChild(c);
+/* ─── SEARCH: jump to matching card title ─── */
+function initSearch() {
+  const input = qs('#search-input');
+  input.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    const term = input.value.trim().toLowerCase();
+    if (!term) return;
+    const titles = Array.from(document.querySelectorAll('.card-title, .stat-label'));
+    const match = titles.find(el => el.textContent.toLowerCase().includes(term));
+    if (match) {
+      match.closest('.card, .ai-insight-card').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const card = match.closest('.card, .ai-insight-card');
+      card.style.outline = '2px solid var(--accent)';
+      setTimeout(() => card.style.outline = '', 1200);
     }
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   FETCH PROFILE
+═══════════════════════════════════════════════ */
+async function loadProfile() {
+  const sid = getSessionId();
+  qs('#nav-chat').href = sid ? `app.html?session=${sid}` : 'app.html';
+  qs('#btn-ask-ai').href = sid ? `app.html?session=${sid}` : 'app.html';
+  qs('#btn-set-budget').href = sid ? `app.html?session=${sid}` : 'app.html';
+
+  if (!sid) { showNoSession(); return; }
+
+  let profile;
+  try {
+    const res = await fetch(`http://localhost:8000/api/sessions/${sid}/profile`);
+    if (!res.ok) throw new Error('Not found');
+    profile = await res.json();
+  } catch {
+    showNoSession();
+    return;
   }
+  render(profile);
+}
 
-  function renderGoals(d) {
-    var box = document.getElementById('goals-body');
-    box.innerHTML = '';
+function showNoSession() {
+  qs('#top-row').innerHTML = `
+    <div class="card empty-state" style="grid-column:1/-1;padding:48px">
+      <div class="empty-state-icon">💬</div>
+      <div class="empty-state-title">No conversation found</div>
+      <div class="empty-state-body">Start a conversation with FinPal first, then come back here to see your snapshot.</div>
+      <a href="app.html" class="btn btn-primary" style="margin-top:16px;display:inline-flex">Start chatting</a>
+    </div>`;
+  qs('#mid-row').innerHTML = '';
+  qs('#pie-card').style.display = 'none';
+  qs('#priorities-anchor').style.display = 'none';
+  document.querySelectorAll('.bottom-row .card').forEach(c => c.style.display = 'none');
+  qs('#goals-section').style.display = 'none';
+}
 
-    if (!d.goals.length) {
-      box.appendChild(emptyNote('No goals set yet. Tell FinPal what you are saving towards.'));
-      return;
-    }
+/* ═══════════════════════════════════════════════
+   DERIVE NUMBERS FROM PROFILE
+═══════════════════════════════════════════════ */
+// Guideline % of income per category — sums to the app's 50/30/20 split
+// (Housing 30 + Commute 10 + Food 10 = 50% Needs; Subs 5 + Discretionary 20 + BNPL 5 = 30% Wants; Savings 20 = the remaining 20%)
+const GUIDELINES = { housing: 0.30, commute: 0.10, food: 0.10, subs: 0.05, discretionary: 0.20, bnpl: 0.05, savings: 0.20 };
 
-    var rows = el('div', 'rows');
-    d.goals.forEach(function (g) {
-      var name   = g.name || g.goal || 'Goal';
-      var target = g.target_amount != null ? g.target_amount : g.amount;
-      var saved  = g.saved_amount != null ? g.saved_amount : g.current_amount;
+// Some fields are meant to be a plain number but the model occasionally saves
+// an object instead (e.g. { amount, note } or just { note }). Recover the
+// number when there is one to recover; otherwise treat it as not yet captured.
+function numFrom(val) {
+  if (val == null) return 0;
+  if (typeof val === 'number') return val;
+  if (typeof val === 'object') return Number(val.amount) || 0;
+  return Number(val) || 0;
+}
 
-      var block = el('div');
-      var row = el('div', 'row');
-      row.appendChild(el('span', 'row-label', F.titleise(name)));
-      if (target != null) row.appendChild(el('strong', null, INR(target)));
-      if (g.timeline || g.by) row.appendChild(el('span', 'badge', String(g.timeline || g.by)));
-      block.appendChild(row);
-
-      if (target > 0 && saved != null) {
-        var track = el('div', 'bar-track');
-        track.style.marginTop = '6px';
-        var fill = el('div', 'bar-fill mint');
-        fill.style.width = clamp(PCT(saved, target), 0, 100) + '%';
-        track.appendChild(fill);
-        block.appendChild(track);
-        block.appendChild(el('span', 'bar-status', INR(saved) + ' saved of ' + INR(target)));
-      }
-      rows.appendChild(block);
-    });
-    box.appendChild(rows);
+// Same defensive-parsing need as numFrom, but for fields that should be a
+// plain string (e.g. income_stability) and sometimes come back as an object
+// instead — coerce rather than let a raw .includes()/.toLowerCase() throw
+// and crash the whole derive() call.
+function strFrom(val) {
+  if (val == null) return '';
+  if (typeof val === 'string') return val;
+  if (typeof val === 'object') {
+    const firstString = Object.values(val).find(v => typeof v === 'string' && v.trim());
+    return firstString || '';
   }
+  return String(val);
+}
 
-  function renderProjection(d) {
-    var box = document.getElementById('projection-body');
-    box.innerHTML = '';
+function derive(p) {
+  const mi = p.money_in || {};
+  const ex = p.expenses || {};
+  const sn = p.safety_net || {};
+  const bnpl = ex.bnpl_usage || {};
+  const acad = p.academic || {};
 
-    if (d.sip <= 0) {
-      box.appendChild(emptyNote(d.surplus < 0
-        ? 'There is no surplus to invest yet — closing the monthly gap comes first.'
-        : 'Once FinPal knows your income and expenses, it can project a SIP to graduation.'));
-      return;
-    }
+  const familyIncome = Number(mi.family_support_amount) || 0;
+  const gigIncome = Number(mi.gig_income_amount) || 0;
+  const income = familyIncome + gigIncome;
 
-    var grid = el('div', 'snapshot-grid');
-    grid.appendChild(metric('Monthly SIP', INR(d.sip), 'Half of your surplus'));
-    grid.appendChild(metric('Months to graduation', String(d.monthsToGrad), 'Class of ' + d.gradYear));
-    grid.appendChild(metric('You contribute', INR(d.contributed), 'Over that period'));
-    grid.appendChild(metric('Projected value', INR(d.corpus), 'At 12% p.a., compounded monthly', 'good'));
-    box.appendChild(grid);
+  const housing = Number(ex.housing?.amount) || 0;
+  const commute = Number(ex.commute?.amount) || 0;
+  const food    = numFrom(ex.food_beyond_mess);
+  const discr   = numFrom(ex.discretionary);
+  const bnplAmt = Number(bnpl.typical_monthly_amount) || 0;
 
-    // Year-by-year columns, drawn with DOM elements only.
-    var years = Math.max(1, Math.ceil(d.monthsToGrad / 12));
-    var points = [];
-    for (var y = 1; y <= years; y++) {
-      var months = Math.min(d.monthsToGrad, y * 12);
-      var value = Math.round(d.sip * ((Math.pow(1.01, months) - 1) / 0.01) * 1.01);
-      points.push({ label: 'Yr ' + y, value: value });
-    }
-    var max = points[points.length - 1].value || 1;
+  const subsRaw = ex.subscriptions;
+  const subsAmt = Array.isArray(subsRaw)
+    ? subsRaw.reduce((a, s) => a + (Number(s.monthly_cost) || 0), 0)
+    : numFrom(subsRaw);
 
-    var chart = el('div', 'columns mt');
-    chart.setAttribute('role', 'img');
-    chart.setAttribute('aria-label', 'Projected corpus: ' +
-      points.map(function (p) { return p.label + ' ' + INR(p.value); }).join(', '));
-    points.forEach(function (p) {
-      var col = el('div', 'column');
-      col.appendChild(el('span', 'column-val', INR(p.value)));
-      var b = el('div', 'column-bar');
-      b.style.height = Math.max(4, Math.round((p.value / max) * 100)) + '%';
-      col.appendChild(b);
-      col.appendChild(el('span', 'column-cap', p.label));
-      chart.appendChild(col);
-    });
-    box.appendChild(chart);
+  const needs  = housing + commute + food;
+  const wants  = subsAmt + discr + bnplAmt;
+  const totalEx = needs + wants;
+  const surplus = income - totalEx;
 
-    box.appendChild(el('p', 'small muted mt-s',
-      'An illustration, not a promise — returns vary and 12% is only an assumption.'));
-  }
+  const fixedEx    = housing + subsAmt;
+  const variableEx = commute + food + discr + bnplAmt;
 
-  function renderRecommendations(d) {
-    var list = document.getElementById('recommendations');
-    list.innerHTML = '';
-    var tips = [];
+  const tNeeds   = income * 0.5;
+  const tWants   = income * 0.3;
+  const tSavings = income * 0.2;
+  const actualSavings = Math.max(0, surplus);
 
-    if (d.income <= 0) {
-      tips.push(['', 'Tell FinPal what comes in each month — nothing else can be calculated without it.']);
-    }
-    if (d.surplus < 0) {
-      tips.push(['bad', 'You are spending ' + INR(Math.abs(d.surplus)) +
-        ' more than you receive each month. Cutting the wants column is the fastest fix.']);
-    }
-    if (d.bnplRisk === 'high' || d.bnplRisk === 'critical') {
-      tips.push(['bad', 'Your pay-later use is rated ' + d.bnplRisk +
-        '. Clear the outstanding balances before adding any new app.']);
-    } else if (d.bnplAmt > 0 && d.income > 0 && d.bnplAmt / d.income > 0.1) {
-      tips.push(['warn', 'BNPL takes ' + PCT(d.bnplAmt, d.income) +
-        '% of your income. Under 10% is a safer ceiling for a student.']);
-    }
-    if (d.savings > 0 && d.efMonths < d.efTarget) {
-      tips.push(['warn', 'Your cushion covers ' + d.efMonths.toFixed(1) + ' months. Getting to ' +
-        d.efTarget + ' needs another ' + INR(d.efGap) + '.']);
-    }
-    var expensive = d.debts.filter(function (x) {
-      var apr = x.apr != null ? x.apr : x.interest_rate;
-      return Number(apr) > 15;
-    });
-    if (expensive.length) {
-      tips.push(['bad', 'You have ' + expensive.length + ' borrowing' + (expensive.length > 1 ? 's' : '') +
-        ' above 15% interest. Repaying those beats any investment return you are likely to get.']);
-    }
-    if (!d.hasInsurance) {
-      tips.push(['warn', 'No health cover is recorded. A single hospital bill can wipe out a student cushion — ' +
-        'check whether a family policy already covers you.']);
-    }
-    if (d.subs > 0 && d.income > 0 && d.subs / d.income > 0.05) {
-      tips.push(['warn', 'Subscriptions cost ' + INR(d.subs) + ' a month — ' + INR(d.subs * 12) +
-        ' a year. Worth auditing which ones you actually opened last month.']);
-    }
-    if (d.surplus > 0 && d.efMonths >= d.efTarget && !expensive.length) {
-      tips.push(['', 'Cushion funded and no expensive debt — a ' + INR(d.sip) +
-        ' monthly SIP is a reasonable next step to discuss with FinPal.']);
-    }
-    if (!tips.length) {
-      tips.push(['', 'Nothing urgent stands out. Keep the conversation going so the picture stays current.']);
-    }
+  const savings   = numFrom(sn.personal_savings_amount);
+  const essentials = needs > 0 ? needs : (income * 0.5);
+  const efMonths   = essentials > 0 ? savings / essentials : 0;
+  const stability  = strFrom(mi.income_stability);
+  const efTarget   = stability.includes('gig') ? 12 : stability.includes('fixed') ? 3 : 6;
 
-    tips.forEach(function (t) {
-      list.appendChild(el('li', t[0], t[1]));
+  const apps = Array.isArray(bnpl.apps_used) ? bnpl.apps_used : [];
+  const missed = !!bnpl.missed_or_min_only;
+  let bnplScore = 0;
+  if (missed) bnplScore += 2;
+  if (apps.length >= 2) bnplScore += 1;
+  if (income > 0 && bnplAmt / income > 0.15) bnplScore += 1;
+  const bnplRisk = ['low','moderate','high','critical'][Math.min(bnplScore, 3)];
+
+  const debts = Array.isArray(p.debt) ? p.debt : [];
+  // The model doesn't always capture an APR figure, but "minimum due only" /
+  // "revolving" on a credit card is itself the red flag (India card APRs
+  // typically run 30-42%) — treat that payment habit as high-interest too.
+  const MIN_PAYMENT_RE = /minimum|revolv|carr(y|ied)/i;
+  const highInterestDebt = debts.find(d => (d.apr || 0) > 15 || MIN_PAYMENT_RE.test(d.payment_habit || ''));
+
+  const gradYear = acad.expected_graduation_year || (new Date().getFullYear() + 2);
+  const monthsToGrad = Math.max(1, (gradYear - new Date().getFullYear()) * 12 - new Date().getMonth());
+  const sipAmount = Math.max(0, Math.round(surplus * 0.5));
+
+  const r = 0.01;
+  const corpus = sipAmount > 0
+    ? Math.round(sipAmount * ((Math.pow(1 + r, monthsToGrad) - 1) / r) * (1 + r))
+    : 0;
+
+  const hasInsurance = !!(sn.health_insurance_cover && sn.health_insurance_cover !== 'none');
+
+  // Priority stack (shared by AI insight, priority card, bell badge)
+  const priorities = [];
+  if (highInterestDebt) {
+    const aprLabel = highInterestDebt.apr ? `${highInterestDebt.apr}% APR` : 'high-interest — minimum payments only';
+    const aprReason = highInterestDebt.apr
+      ? `This guarantees a ${highInterestDebt.apr}% return — no investment beats that. Clear it before investing anything.`
+      : `Paying only the minimum lets the balance revolve at typical Indian credit card rates (30-42% APR) — that's costlier than almost anything you could earn by investing instead. Pay more than the minimum before investing.`;
+    priorities.push({
+      color: 'var(--red)', bg: 'var(--red-light)', type: 'critical', icon: '🚨',
+      action: `Pay high-interest debt first (${aprLabel})`,
+      reason: aprReason,
     });
   }
-
-  /* ---------------- boot ---------------- */
-  function wireLinks(sid) {
-    var advisor = F.linkWithSession('app.html', sid);
-    ['advisor-link', 'continue-link'].forEach(function (id) {
-      var node = document.getElementById(id);
-      if (node) node.href = advisor;
+  if (!hasInsurance) priorities.push({
+    color: 'var(--amber)', bg: 'var(--amber-light)', type: 'warning', icon: '🏥',
+    action: 'Get health insurance coverage',
+    reason: 'One medical emergency without cover can wipe out savings and force debt. Check your family plan or a low-cost student policy.',
+  });
+  if (efMonths < efTarget) {
+    const gap = Math.round((efTarget - efMonths) * essentials);
+    priorities.push({
+      color: 'var(--accent)', bg: 'var(--accent-light)', type: 'info', icon: '🛡️',
+      action: `Build emergency fund to ${efTarget}-month target`,
+      reason: `You have ${efMonths.toFixed(1)} months of cover. Need ${INR(gap)} more to hit the ${efTarget}-month buffer.`,
     });
-    var home = document.getElementById('home-link');
-    if (home) home.href = F.linkWithSession('index.html', sid);
   }
+  if (bnplScore > 0) priorities.push({
+    color: 'var(--red)', bg: 'var(--red-light)', type: 'critical', icon: '⚠️',
+    action: `BNPL risk: ${bnplRisk}`,
+    reason: missed ? 'Missed payment detected — pay in full now to stop interest compounding.' : `${apps.join(' + ')} — watch total due dates.`,
+  });
+  if (priorities.length === 0) priorities.push({
+    color: 'var(--green)', bg: 'var(--green-light)', type: 'good', icon: '✅',
+    action: 'Ready to invest — great foundation',
+    reason: 'Debt, insurance, and emergency fund are on track. Focus on growing your surplus into long-term investments.',
+  });
+  else if (surplus > 0) priorities.push({
+    color: 'var(--muted)', bg: 'var(--bg)', type: 'info', icon: '📈',
+    action: 'Investments — after priorities above',
+    reason: `You have ${INR(surplus)} available monthly. Start PPF or a simple index fund SIP once the priorities above are addressed.`,
+  });
 
-  var sid = F.sessionFromQuery();
-  wireLinks(sid);
+  return {
+    income, familyIncome, gigIncome, housing, commute, food, discr, bnplAmt, subsAmt,
+    needs, wants, totalEx, surplus, actualSavings, fixedEx, variableEx,
+    tNeeds, tWants, tSavings,
+    savings, efMonths, efTarget, essentials,
+    apps, missed, bnplRisk, bnplScore,
+    highInterestDebt, debts,
+    gradYear, monthsToGrad, sipAmount, corpus, r,
+    hasInsurance, priorities,
+    phase: p.conversation_phase || 'rapport',
+    goals: Array.isArray(p.goals) ? p.goals : (p.goals && typeof p.goals === 'object' ? [p.goals] : []),
+  };
+}
 
-  if (!sid) {
-    document.getElementById('phase-badge').textContent = 'No session';
-    document.getElementById('page-lede').textContent =
-      'The dashboard reads the profile from an advisor session.';
-    showStatus('No conversation yet',
-      'Talk to FinPal first — the dashboard reads the profile from that session, ' +
-      'then keep the ?session link to come back to it.');
+/* ═══════════════════════════════════════════════
+   RENDER
+═══════════════════════════════════════════════ */
+function render(profile) {
+  const d = derive(profile);
+  qs('#phase-text').textContent = d.phase.replace(/_/g, ' ');
+
+  renderHero(d);
+  renderCatChart(d);
+  renderPieChart(d);
+  renderExpenses(d);
+  renderFixVar(d);
+  renderAiInsight(d);
+  renderTable(d);
+  renderProjection(d);
+  renderPriorities(d);
+  renderGoals(d);
+  renderBell(d);
+}
+
+function renderHero(d) {
+  qs('#stat-income').textContent = INR(d.income);
+  qs('#income-change').textContent = d.income > 0 ? `${d.gigIncome > 0 ? 'Family + gig' : 'Family support'}` : 'No income yet';
+  qs('#income-change').className = 'stat-change up';
+
+  qs('#stat-spent').textContent = INR(d.totalEx);
+  const expPct = PCT(d.totalEx, d.income);
+  qs('#stat-spent-sub').innerHTML = d.income > 0 ? `<b style="color:${expPct>80?'var(--red)':expPct>60?'var(--amber)':'var(--green)'}">${expPct}%</b> of total budget` : 'Complete the conversation to fill this';
+
+  const remEl = qs('#stat-remaining');
+  remEl.textContent = INR(Math.abs(d.surplus));
+  remEl.style.color = d.surplus < 0 ? 'var(--red)' : 'var(--text)';
+  const remPct = PCT(Math.abs(d.surplus), d.income);
+  qs('#stat-remaining-sub').innerHTML = d.income > 0
+    ? (d.surplus < 0 ? `<b style="color:var(--red)">Deficit</b> — spending exceeds income` : `<b style="color:var(--green)">${remPct}%</b> remaining of budget`)
+    : 'Complete the conversation to fill this';
+}
+
+function renderCatChart(d) {
+  const canvas = qs('#cat-chart');
+  const wrap = canvas.parentElement;
+  const dpr = window.devicePixelRatio || 1;
+  const W = wrap.offsetWidth, H = wrap.offsetHeight || 190;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, H);
+
+  const cats = [
+    { label: 'Housing', amt: d.housing },
+    { label: 'Commute', amt: d.commute },
+    { label: 'Food',    amt: d.food },
+    { label: 'Subs',    amt: d.subsAmt },
+    { label: 'Discr.',  amt: d.discr },
+    { label: 'BNPL',    amt: d.bnplAmt },
+  ].filter(c => c.amt > 0);
+
+  const styles = getComputedStyle(document.documentElement);
+  const muted = styles.getPropertyValue('--muted2').trim() || '#B4BAC7';
+  const accent = styles.getPropertyValue('--accent').trim() || '#2F6FED';
+  const accentDark = styles.getPropertyValue('--accent-dark').trim() || '#1B4FC4';
+
+  if (cats.length === 0) {
+    ctx.fillStyle = muted;
+    ctx.font = '13px "Plus Jakarta Sans", system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText('Complete the conversation to see spending by category', W / 2, H / 2);
     return;
   }
 
-  F.getProfile(sid).then(function (profile) {
-    var d = derive(profile);
+  const pad = { top: 14, right: 10, bottom: 26, left: 10 };
+  const gW = W - pad.left - pad.right;
+  const gH = H - pad.top - pad.bottom;
+  const maxAmt = Math.max(...cats.map(c => c.amt));
+  const bw = (gW / cats.length) * 0.5;
+  const gap = (gW / cats.length) * 0.5;
 
-    document.getElementById('phase-badge').textContent = F.titleise(d.phase);
-    document.getElementById('page-lede').textContent = d.income > 0
-      ? 'Everything below comes from what you told FinPal in this session.'
-      : 'The panels fill in as you tell FinPal more. Nothing is assumed for you.';
+  cats.forEach((c, i) => {
+    const x = pad.left + i * (bw + gap) + gap / 2;
+    const h = maxAmt > 0 ? (c.amt / maxAmt) * gH : 0;
+    const y = pad.top + gH - h;
+    const grad = ctx.createLinearGradient(0, y, 0, pad.top + gH);
+    grad.addColorStop(0, i % 2 === 0 ? accent : accentDark);
+    grad.addColorStop(1, i % 2 === 0 ? accent : accentDark);
+    ctx.globalAlpha = 0.9;
+    ctx.fillStyle = grad;
+    roundRectTop(ctx, x, y, bw, h, 6);
+    ctx.fill();
+    ctx.globalAlpha = 1;
 
-    renderSnapshot(d);
-    renderBudget(d);
-    renderExpenses(d);
-    renderEmergencyFund(d);
-    renderDebt(d);
-    renderGoals(d);
-    renderProjection(d);
-    renderRecommendations(d);
-
-    statusBox.classList.add('hidden');
-    dash.classList.remove('hidden');
-  }).catch(function (err) {
-    document.getElementById('phase-badge').textContent = 'Unavailable';
-    document.getElementById('page-lede').textContent = 'Could not load this session.';
-    showStatus('Session unavailable',
-      (err && err.message) || 'That session could not be loaded. Start a new conversation.',
-      err && err.status === 404 ? 'warn' : 'bad');
+    ctx.fillStyle = muted;
+    ctx.font = '10px "Plus Jakarta Sans", system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText(c.label, x + bw / 2, H - 8);
   });
-})();
+}
+function roundRectTop(ctx, x, y, w, h, r) {
+  if (h < r) r = h;
+  ctx.beginPath();
+  ctx.moveTo(x, y + h);
+  ctx.lineTo(x, y + r);
+  ctx.arcTo(x, y, x + r, y, r);
+  ctx.lineTo(x + w - r, y);
+  ctx.arcTo(x + w, y, x + w, y + r, r);
+  ctx.lineTo(x + w, y + h);
+  ctx.closePath();
+}
+
+// Fixed, saturated hues rather than the app's theme-swapped accent color —
+// these stay put across both light and dark card backgrounds instead of
+// flipping blue/orange with the theme, so the slice-vs-background contrast
+// (the whole point of a pie legend) doesn't depend on which theme is active.
+const PIE_COLORS = {
+  housing: '#3B82F6', commute: '#F97316', food: '#FACC15',
+  subs: '#8B5CF6', discretionary: '#14B8A6', bnpl: '#EF4444', savings: '#22C55E',
+};
+
+function renderPieChart(d) {
+  const canvas = qs('#pie-chart');
+  const wrap = canvas.parentElement;
+  const dpr = window.devicePixelRatio || 1;
+  const W = wrap.offsetWidth, H = wrap.offsetHeight || 250;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, H);
+
+  const styles = getComputedStyle(document.documentElement);
+  const col = name => styles.getPropertyValue(name).trim();
+  const muted = col('--muted2') || '#B4BAC7';
+  const cardBg = col('--card-bg') || '#FFFFFF';
+
+  const slices = [
+    { label: 'Housing',           amt: d.housing,       color: PIE_COLORS.housing },
+    { label: 'Commute',           amt: d.commute,       color: PIE_COLORS.commute },
+    { label: 'Food beyond mess',  amt: d.food,          color: PIE_COLORS.food },
+    { label: 'Subscriptions',     amt: d.subsAmt,       color: PIE_COLORS.subs },
+    { label: 'Discretionary',     amt: d.discr,         color: PIE_COLORS.discretionary },
+    { label: 'BNPL Apps',         amt: d.bnplAmt,       color: PIE_COLORS.bnpl },
+    { label: 'Savings',           amt: d.actualSavings, color: PIE_COLORS.savings },
+  ].filter(s => s.amt > 0);
+
+  const tooltip = qs('#pie-tooltip');
+  if (d.income === 0 || slices.length === 0) {
+    ctx.fillStyle = muted;
+    ctx.font = '13px "Plus Jakarta Sans", system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText('Complete the conversation', W / 2, H / 2 - 6);
+    ctx.fillText('to see income allocation', W / 2, H / 2 + 12);
+    qs('#pie-legend').innerHTML = '';
+    canvas.onmousemove = null;
+    canvas.onmouseleave = null;
+    tooltip.style.display = 'none';
+    return;
+  }
+
+  // Slices are proportions of total income. If spending exceeds income, the
+  // raw amounts would sum past a full circle — use the larger of the two as
+  // the angle denominator so the pie always closes cleanly, while the legend
+  // % (against income alone) is left free to read above 100% as an honest
+  // signal that they're overspending.
+  const totalSlices = slices.reduce((a, s) => a + s.amt, 0);
+  const angleDenom = Math.max(d.income, totalSlices, 1);
+
+  const cx = W / 2, cy = H / 2, r = Math.min(W, H) / 2 - 4;
+  const rInner = r * 0.6;
+  let start = -Math.PI / 2;
+  const sliceRanges = [];
+  slices.forEach(s => {
+    const angle = (s.amt / angleDenom) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, start, start + angle);
+    ctx.closePath();
+    ctx.fillStyle = s.color;
+    ctx.fill();
+    sliceRanges.push({ label: s.label, amt: s.amt, start, end: start + angle });
+    start += angle;
+  });
+
+  // Donut hole so the income total stays legible at the center.
+  ctx.beginPath();
+  ctx.arc(cx, cy, rInner, 0, Math.PI * 2);
+  ctx.fillStyle = cardBg;
+  ctx.fill();
+
+  ctx.fillStyle = col('--text') || '#14181F';
+  ctx.font = '700 15px "Plus Jakarta Sans", system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText(INR(d.income), cx, cy - 2);
+  ctx.fillStyle = muted;
+  ctx.font = '10px "Plus Jakarta Sans", system-ui';
+  ctx.fillText('monthly income', cx, cy + 14);
+
+  const legendRows = slices.map(s => {
+    const pct = Math.round((s.amt / d.income) * 100);
+    return `<div class="pie-legend-row">
+      <span class="pie-legend-swatch" style="background:${s.color}"></span>
+      <span class="pie-legend-label">${s.label}</span>
+      <span class="pie-legend-pct">${pct}%</span>
+      <span class="pie-legend-amt">${INR(s.amt)}</span>
+    </div>`;
+  }).join('');
+  const overBudgetNote = d.surplus < 0
+    ? `<div class="pie-legend-row" style="color:var(--red);font-weight:700">Spending exceeds income by ${INR(Math.abs(d.surplus))}</div>`
+    : '';
+  qs('#pie-legend').innerHTML = legendRows + overBudgetNote;
+
+  // Hover a wedge to see its category and share of income. Handlers are
+  // reassigned (not added) on every render so they always close over this
+  // render's sliceRanges/geometry instead of stacking stale listeners.
+  canvas.onmousemove = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    const dist = Math.hypot(mx - cx, my - cy);
+    if (dist < rInner || dist > r) { tooltip.style.display = 'none'; canvas.style.cursor = 'default'; return; }
+
+    // atan2 in canvas's y-down coordinate space already increases clockwise,
+    // matching arc()'s sweep direction — normalize into the same
+    // [-PI/2, -PI/2 + 2PI) baseline the slices were drawn from.
+    let a = Math.atan2(my - cy, mx - cx);
+    while (a < -Math.PI / 2) a += Math.PI * 2;
+    while (a >= -Math.PI / 2 + Math.PI * 2) a -= Math.PI * 2;
+
+    const hit = sliceRanges.find(sr => a >= sr.start && a < sr.end);
+    if (!hit) { tooltip.style.display = 'none'; canvas.style.cursor = 'default'; return; }
+
+    canvas.style.cursor = 'pointer';
+    const pct = Math.round((hit.amt / d.income) * 100);
+    tooltip.innerHTML = `<strong>${hit.label}</strong><br>${pct}% &middot; ${INR(hit.amt)}`;
+    tooltip.style.display = 'block';
+    tooltip.style.left = Math.min(mx + 14, W - 4) + 'px';
+    tooltip.style.top = Math.min(my + 14, H - 4) + 'px';
+  };
+  canvas.onmouseleave = () => { tooltip.style.display = 'none'; canvas.style.cursor = 'default'; };
+}
+
+function renderExpenses(d) {
+  const cats = [
+    { icon: '🏠', label: 'Housing', amt: d.housing, guide: GUIDELINES.housing, bg: 'var(--accent-light)', fill: 'var(--accent)' },
+    { icon: '🚇', label: 'Commute', amt: d.commute, guide: GUIDELINES.commute, bg: 'var(--accent-light)', fill: 'var(--accent)' },
+    { icon: '🍔', label: 'Food beyond mess', amt: d.food, guide: GUIDELINES.food, bg: 'var(--amber-light)', fill: 'var(--amber)' },
+    { icon: '📱', label: 'Subscriptions', amt: d.subsAmt, guide: GUIDELINES.subs, bg: 'var(--amber-light)', fill: 'var(--amber)' },
+    { icon: '🎮', label: 'Discretionary', amt: d.discr, guide: GUIDELINES.discretionary, bg: 'var(--green-light)', fill: 'var(--green)' },
+    { icon: '💳', label: 'BNPL Apps', amt: d.bnplAmt, guide: GUIDELINES.bnpl, bg: 'var(--red-light)', fill: 'var(--red)' },
+  ].filter(c => c.amt > 0);
+
+  if (cats.length === 0 || d.income === 0) {
+    qs('#expense-list').innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-body">Complete the conversation to see your expense breakdown.</div></div>';
+    return;
+  }
+
+  qs('#expense-list').innerHTML = cats.map(c => {
+    const target = d.income * c.guide;
+    const pctOfTarget = target > 0 ? Math.round((c.amt / target) * 100) : 0;
+    const over = c.amt > target;
+    const fillPct = clamp(target > 0 ? (c.amt / target) * 100 : 100, 4, 100);
+    return `<div class="exp-row">
+      <div class="exp-row-head">
+        <div class="exp-icon-label">
+          <div class="exp-icon" style="background:${c.bg}">${c.icon}</div>
+          <span class="exp-name">${c.label}</span>
+        </div>
+        <div class="exp-nums">
+          <span class="exp-amount">${INR(target)}</span>
+          <span class="exp-pct-badge ${over ? 'over' : 'under'}">${pctOfTarget}%</span>
+        </div>
+      </div>
+      <div class="exp-track"><div class="exp-fill" style="width:${fillPct}%;background:${over ? 'var(--red)' : c.fill}"></div></div>
+      <div class="exp-actual-label">Actual: ${INR(c.amt)}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderFixVar(d) {
+  qs('#stat-fixed').textContent = INR(d.fixedEx);
+  const fixedPct = PCT(d.fixedEx, d.income);
+  qs('#stat-fixed-sub').innerHTML = d.income > 0 ? `<b>${fixedPct}%</b> of income` : '—';
+
+  qs('#stat-variable').textContent = INR(d.variableEx);
+  const varPct = PCT(d.variableEx, d.income);
+  qs('#stat-variable-sub').innerHTML = d.income > 0 ? `<b>${varPct}%</b> of income` : '—';
+}
+
+function renderAiInsight(d) {
+  const top = d.priorities[0];
+  if (!top || d.income === 0) {
+    qs('#ai-insight-body').textContent = 'Keep chatting with FinPal — your personalized insight will appear here once you share your numbers.';
+    return;
+  }
+  qs('#ai-insight-body').innerHTML = `<strong>${top.action}.</strong> ${top.reason}`;
+}
+
+function renderTable(d) {
+  const rows = [
+    { label: 'Housing', icon: '🏠', amt: d.housing, guide: GUIDELINES.housing },
+    { label: 'Commute', icon: '🚇', amt: d.commute, guide: GUIDELINES.commute },
+    { label: 'Food beyond mess', icon: '🍔', amt: d.food, guide: GUIDELINES.food },
+    { label: 'Subscriptions', icon: '📱', amt: d.subsAmt, guide: GUIDELINES.subs },
+    { label: 'Discretionary', icon: '🎮', amt: d.discr, guide: GUIDELINES.discretionary },
+    { label: 'BNPL Apps', icon: '💳', amt: d.bnplAmt, guide: GUIDELINES.bnpl },
+    // Savings is a "should reach at least" target rather than a spending cap,
+    // so its good/bad direction is the opposite of every row above — flagged
+    // via `invert` below (saving more than the guideline is good, not over).
+    { label: 'Savings', icon: '💰', amt: d.actualSavings, guide: GUIDELINES.savings, invert: true },
+  ];
+
+  if (d.income === 0) {
+    qs('#budget-table-body').innerHTML = `<tr><td colspan="5" class="muted-cell">Complete the conversation with FinPal to populate this table.</td></tr>`;
+    return;
+  }
+
+  qs('#budget-table-body').innerHTML = rows.map(r => {
+    const target = d.income * r.guide;
+    const variance = r.amt - target;
+    let status, statusLabel;
+    if (r.invert) {
+      status = r.amt >= target * 0.95 ? 'under' : r.amt >= target * 0.7 ? 'tight' : 'over';
+      statusLabel = status === 'under' ? 'Meeting goal' : status === 'tight' ? 'Close to goal' : 'Below goal';
+    } else {
+      status = target === 0 && r.amt > 0 ? 'over'
+        : r.amt <= target * 0.9 ? 'under'
+        : r.amt <= target * 1.05 ? 'tight' : 'over';
+      statusLabel = status === 'over' ? 'Over guideline' : status === 'under' ? 'Under guideline' : 'On track';
+    }
+    return `<tr>
+      <td><div class="table-cat"><span>${r.icon}</span>${r.label}</div></td>
+      <td class="muted-cell">${INR(target)}</td>
+      <td>${INR(r.amt)}</td>
+      <td class="muted-cell">${variance > 0 ? '+' : ''}${INR(variance)}</td>
+      <td><span class="status-pill ${status}">${statusLabel}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderProjection(d) {
+  qs('#proj-sip').textContent = d.sipAmount > 0 ? INR(d.sipAmount) + '/mo' : '—';
+  qs('#proj-corpus').textContent = d.corpus > 0 ? INR(d.corpus) : '—';
+
+  const canvas = qs('#proj-canvas');
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.parentElement.offsetWidth, H = 160;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  const styles = getComputedStyle(document.documentElement);
+  const muted = styles.getPropertyValue('--muted2').trim() || '#B4BAC7';
+  const border = styles.getPropertyValue('--border').trim() || '#ECEEF3';
+
+  if (d.sipAmount === 0 || d.income === 0) {
+    ctx.fillStyle = muted;
+    ctx.font = '13px "Plus Jakarta Sans", system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText('Complete the conversation to see your projection', W / 2, H / 2);
+    return;
+  }
+
+  const months = d.monthsToGrad;
+  const points = [];
+  let acc = d.savings;
+  for (let m = 0; m <= months; m++) { acc = acc * (1 + d.r) + d.sipAmount; points.push(acc); }
+  const maxVal = Math.max(...points);
+
+  const pad = { top: 12, right: 16, bottom: 30, left: 14 };
+  const gW = W - pad.left - pad.right, gH = H - pad.top - pad.bottom;
+  const toX = i => pad.left + (i / (points.length - 1)) * gW;
+  const toY = v => pad.top + gH - (v / maxVal) * gH;
+
+  const grad = ctx.createLinearGradient(0, pad.top, 0, H - pad.bottom);
+  grad.addColorStop(0, 'rgba(34,197,94,0.25)');
+  grad.addColorStop(1, 'rgba(34,197,94,0.02)');
+
+  ctx.beginPath();
+  ctx.moveTo(toX(0), toY(points[0]));
+  for (let i = 1; i < points.length; i++) ctx.lineTo(toX(i), toY(points[i]));
+  ctx.lineTo(toX(points.length - 1), H - pad.bottom);
+  ctx.lineTo(toX(0), H - pad.bottom);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(toX(0), toY(points[0]));
+  for (let i = 1; i < points.length; i++) ctx.lineTo(toX(i), toY(points[i]));
+  ctx.strokeStyle = '#22C55E';
+  ctx.lineWidth = 2;
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(toX(points.length - 1), toY(points[points.length - 1]), 4, 0, Math.PI * 2);
+  ctx.fillStyle = '#22C55E';
+  ctx.fill();
+
+  ctx.fillStyle = muted;
+  ctx.font = '10px "Plus Jakarta Sans", system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText('Today', pad.left, H - 8);
+  ctx.fillText(d.gradYear.toString(), toX(points.length - 1), H - 8);
+
+  ctx.strokeStyle = border;
+  ctx.lineWidth = 1;
+  [0.25, 0.5, 0.75].forEach(f => {
+    const y = pad.top + gH * (1 - f);
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
+  });
+}
+
+function renderPriorities(d) {
+  qs('#priority-list').innerHTML = d.priorities.map(p => `
+    <div class="rec-item ${p.type}">
+      <span class="rec-icon">${p.icon}</span>
+      <div class="rec-text"><strong>${p.action}.</strong> ${p.reason}</div>
+    </div>`).join('');
+}
+
+function renderGoals(d) {
+  if (!d.goals.length) return; // keep default empty-state markup
+  qs('#goals-grid').innerHTML = d.goals.map(g => `
+    <div class="goal-card">
+      <div class="goal-name">${(strFrom(g.type) || 'Goal').replace(/_/g, ' ')}</div>
+      <div class="goal-amt">${numFrom(g.target_amount) ? INR(numFrom(g.target_amount)) + ' target' : 'In progress'}</div>
+    </div>`).join('');
+}
+
+function renderBell(d) {
+  const risky = d.priorities.filter(p => p.type === 'critical' || p.type === 'warning').length;
+  const badge = qs('#bell-badge');
+  if (risky > 0) { badge.hidden = false; badge.textContent = risky; }
+  else badge.hidden = true;
+}
+
+/* ─── WIRING ─── */
+qs('#btn-export').addEventListener('click', () => window.print());
+qs('#bell-btn').addEventListener('click', () => qs('#priorities-anchor').scrollIntoView({ behavior: 'smooth', block: 'start' }));
+qs('#ai-insight-btn').addEventListener('click', () => qs('#priorities-anchor').scrollIntoView({ behavior: 'smooth', block: 'start' }));
+
+/* ─── INIT ─── */
+initTheme();
+initSearch();
+loadProfile();
+window.addEventListener('resize', () => loadProfile());
 </script>
 </body>
 </html>
