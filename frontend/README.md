@@ -1,204 +1,204 @@
-# FinPal frontend — drop-in static package
+# FinPal Frontend
 
-Plain HTML, CSS and JavaScript. No build step, no framework, no bundler, no CDN
-JavaScript. Drop the folder into the existing FastAPI project and serve it.
-
-```
-frontend/
-  index.html      landing page
-  app.html        AI advisor (chat + voice)
-  dashboard.html  financial dashboard
-  styles.css      the whole design system
-  api.js          API layer + shared helpers
-  README.md       this file
-```
-
-The only external request is the Google Fonts stylesheet for Sora and Manrope.
-Remove the two `<link>` tags in each page's `<head>` if you want a fully offline
-build — the CSS falls back to system sans-serif.
+Framework-free, build-step-free static package for the FinPal FastAPI backend.
 
 ---
 
-## 1. Install
+## File map
 
-Replace the existing `frontend/` directory with this one:
-
-```bash
-rm -rf frontend && unzip finpal-frontend.zip
-```
-
-No Python code changes are required.
+| File | Purpose |
+|---|---|
+| `index.html` | Landing page — compact financial snapshot, budget breakdown, feature list, advisor preview |
+| `app.html` | AI financial advisor — streamed chat, voice input, live profile panel |
+| `dashboard.html` | Student finance dashboard — snapshot, budget, expenses, emergency fund, debt, goals, SIP projection, recommendations |
+| `styles.css` | Single shared stylesheet — dark charcoal/cyan theme, all CSS custom properties defined in `:root` |
+| `api.js` | API layer — session management, streaming SSE chat, voice upload, microphone helpers, audio playback, formatting utilities |
+| `README.md` | This file |
 
 ---
 
-## 2. Run it in development
+## Where to put the files
 
-Serve the folder over HTTP — **do not open the files with `file://`** if you
-want the microphone, because `getUserMedia` requires a secure context
-(`https://` or `http://localhost`).
+Copy the entire `frontend/` directory into the FastAPI repository root:
 
-Terminal 1 — the backend:
-
-```bash
-cd backend && .venv/Scripts/activate && uvicorn app.main:app --reload --port 8000
+```
+your-repo/
+  backend/
+    app/
+      main.py          ← Python backend (do not modify)
+  frontend/            ← copy here
+    index.html
+    app.html
+    dashboard.html
+    styles.css
+    api.js
+    README.md
 ```
 
-Terminal 2 — the static files:
+---
 
-```bash
-cd frontend && python -m http.server 5500
+## Mounting and serving the static files
+
+Add the following to [`backend/app/main.py`](backend/app/main.py) **after** the router is included:
+
+```python
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import os
+
+# Resolve path from this file's location
+_FRONTEND = os.path.join(os.path.dirname(__file__), '..', '..', 'frontend')
+
+# Mount /static so individual assets can be referenced
+app.mount('/static', StaticFiles(directory=_FRONTEND), name='static')
+
+# Route the three pages explicitly so their canonical paths work
+@app.get('/', include_in_schema=False)
+def root():
+    return FileResponse(os.path.join(_FRONTEND, 'index.html'))
+
+@app.get('/app.html', include_in_schema=False)
+def advisor_page():
+    return FileResponse(os.path.join(_FRONTEND, 'app.html'))
+
+@app.get('/dashboard.html', include_in_schema=False)
+def dashboard_page():
+    return FileResponse(os.path.join(_FRONTEND, 'dashboard.html'))
 ```
 
-Then open <http://localhost:5500/index.html>.
+Install the static-files dependency if it is not already present:
 
-The pages are served from `:5500` and the API lives on `:8000`, so this is a
-cross-origin setup. It already works: `backend/app/main.py` registers
-`CORSMiddleware` with `allow_origins=["*"]`. If you tighten that for production,
-list your real origin explicitly and keep `POST`, `GET` and `Content-Type`
-allowed:
+```bash
+pip install aiofiles
+```
+
+All three pages reference `styles.css` and `api.js` with relative paths (`href="styles.css"`, `src="api.js"`), so they resolve correctly whether the files are served from the root or from any other path prefix.
+
+---
+
+## Development: different origins (CORS)
+
+The backend already has a wide CORS policy (`allow_origins=["*"]`), so cross-origin requests from a browser dev-server work without further changes.
+
+If you narrow that policy in future, add your frontend origin explicitly:
 
 ```python
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://finpal.example.com"],
-    allow_methods=["GET", "POST"],
-    allow_headers=["*"],
+    allow_origins=["http://localhost:5173", "https://your-deployed-site.com"],
+    ...
 )
 ```
 
-### Pointing the pages at a different API
+---
 
-`api.js` resolves the API base in this order, first match wins:
+## Setting the API base URL
 
-| Order | Source | Example |
-|---|---|---|
-| 1 | `window.FINPAL_API_BASE`, set before `api.js` loads | `<script>window.FINPAL_API_BASE='http://localhost:8000'</script>` |
-| 2 | `?api=` in the query string | `app.html?api=http://192.168.1.7:8000` |
-| 3 | `file://` pages | falls back to `http://localhost:8000` |
-| 4 | **default** | same origin — production needs no configuration |
+### Production (same origin)
 
-For the two-terminal setup above, either append `?api=http://localhost:8000`
-once (it survives navigation between pages only if you keep re-adding it), or
-add this line above `<script src="api.js">` in the three HTML files while
-developing:
+No change needed. `api.js` defaults to same-origin requests (`BASE = ''`).
 
+### Development (different ports)
+
+**Option 1 — query string (no code change):**
+```
+http://localhost:5173/app.html?api=http://localhost:8000
+```
+
+**Option 2 — set before the script loads:**
 ```html
 <script>window.FINPAL_API_BASE = 'http://localhost:8000';</script>
+<script src="api.js"></script>
 ```
 
-Delete that line before deploying — same-origin is the production default.
+All three HTML files already contain this line pointing to `http://localhost:8000`. Remove or change it before deploying to production.
+
+**Priority order** (first match wins):
+1. `window.FINPAL_API_BASE` set before `api.js` loads
+2. `?api=<base>` query parameter
+3. `file://` protocol → `http://localhost:8000`
+4. Same origin (production default)
 
 ---
 
-## 3. Serve it from FastAPI in production (single origin, no CORS)
+## Session ID flow
 
-Mount the folder in `backend/app/main.py`, after `app.include_router(voice_router)`:
+Sessions are keyed by a UUID created server-side on `POST /api/sessions`.
 
-```python
-from pathlib import Path
-from fastapi.staticfiles import StaticFiles
+The session ID travels through the UI via the `?session=<id>` query parameter:
 
-FRONTEND = Path(__file__).resolve().parents[2] / "frontend"
-app.mount("/", StaticFiles(directory=FRONTEND, html=True), name="frontend")
-```
-
-Notes:
-
-- Mount **last**. `StaticFiles` at `/` is a catch-all; anything mounted after it
-  is unreachable, and `/api/...` must stay ahead of it.
-- `html=True` serves `index.html` at `/` and resolves `app.html` and
-  `dashboard.html` by name.
-- Adjust `parents[2]` if you relocate the folder. From `backend/app/main.py`
-  that resolves to `<project>/frontend`.
-
-With this mount everything is same-origin, `api.js` needs no configuration, and
-CORS becomes irrelevant.
+1. `app.html` creates (or continues) a session on load, then calls `history.replaceState` to put the ID in the URL without a page reload.
+2. Navigation links on every page are updated in JS to carry `?session=<id>` forward.
+3. `dashboard.html` reads `?session=<id>` and calls `GET /api/sessions/{id}/profile` to populate the page.
+4. If the session parameter is missing or the session has expired, each page shows a clear empty/error state and links back to `app.html`.
 
 ---
 
-## 4. Backend contract used
+## Backend response fields the UI expects
 
-Unchanged from `backend/app/api/voice.py`:
+### `POST /api/sessions` → `{ session_id, user_id }`
 
-| Method | Path | Body | Response |
-|---|---|---|---|
-| `POST` | `/api/sessions` | — | `{ session_id, user_id }` |
-| `POST` | `/api/sessions/{id}/chat/stream` | `{ "message": "…" }` | SSE `data:` lines — `{type:"token",text}`, `{type:"done",profile,user_text}`, `{type:"error",text}` |
-| `POST` | `/api/sessions/{id}/voice` | multipart, field `audio` | `{ user_text, advisor_text, audio_b64, profile }` |
-| `GET` | `/api/sessions/{id}/profile` | — | the profile object |
+| Field | Type | Used for |
+|---|---|---|
+| `session_id` | string (UUID) | stored in URL, passed to all subsequent calls |
 
-`POST /api/sessions/{id}/chat` (non-streaming) is left untouched and unused; the
-UI streams instead.
+### `POST /api/sessions/{id}/chat/stream` ← `{ message: string }`
 
-### Sessions
+Server-Sent Events, one JSON payload per `data:` line:
 
-The session id lives in the URL as `?session=<id>` and nowhere else — no
-`localStorage`, no cookie. That preserves the "clear session on every page load"
-behaviour: a fresh visit to `app.html` creates a new session, while
-`app.html?session=<id>` resumes an existing one. `app.html` writes the new id
-into the address bar with `history.replaceState`, so reloading keeps the thread
-and the nav links carry the id between the three pages.
+| Event type | Payload | Used for |
+|---|---|---|
+| `token` | `{ type: "token", text: string }` | append to the current assistant bubble |
+| `done` | `{ type: "done", profile: object, user_text: string }` | refresh the profile panel |
+| `error` | `{ type: "error", text: string }` | show an error bubble |
 
-If a `?session=` id no longer exists (the API answers 404), `app.html` says so
-and starts a fresh session rather than failing; `dashboard.html` shows a
-"session unavailable" notice with a link back to the advisor.
+### `POST /api/sessions/{id}/voice` ← multipart `audio` field
 
-### Voice
+| Field | Type | Used for |
+|---|---|---|
+| `user_text` | string | display the transcribed user message |
+| `advisor_text` | string | display the advisor reply |
+| `audio_b64` | string (base64 WAV) | play the TTS response |
+| `profile` | object | refresh the profile panel |
 
-`api.js` negotiates the recording format in this order, taking the first that
-`MediaRecorder.isTypeSupported` accepts: `audio/webm;codecs=opus`, `audio/webm`,
-`audio/ogg;codecs=opus`, `audio/ogg`, `audio/mp4`. The filename extension is set
-to match, which is what the backend's `_EXT_MAP` uses to name the temp file for
-Whisper. If none is supported the browser default is used.
+### `GET /api/sessions/{id}/profile` → profile object
 
-Blocked or missing microphones, browsers without `MediaRecorder`, and blocked
-autoplay of the TTS reply are all handled: the status line explains what
-happened and the text composer keeps working.
+Top-level keys used by the dashboard:
 
----
-
-## 5. Design
-
-- **Direction:** compact snapshot hero — a real numbers panel above the fold on
-  every page, not decoration.
-- **Palette:** Ink `#101F1A`, Pine `#17594A`, Mint `#6FD6A6`, Mist `#EFF4F1`,
-  plus white surfaces and a `#D5E1DB` border. Signal colours stay in family.
-- **Type:** Sora for headings, Manrope for body.
-- **Alignment:** everything is centred — buttons, headings, labels, metrics,
-  body copy, profile values and chat messages.
-- **Shape:** flat fills, 1px borders, radii of 4/6/8px, nothing larger.
-- **Layout:** responsive bento grids via `repeat(auto-fit, minmax(...))`. Long
-  rupee figures and labels wrap rather than overflow (`overflow-wrap: anywhere`,
-  `min-width: 0` on grid children), and the column charts scroll horizontally
-  inside their own box.
-
-### Performance and accessibility
-
-Removed from the previous build: GSAP and ScrollTrigger, the hero canvas,
-particles, cursor tracking, 3D tilt, decorative timers and heavy blur. What
-remains is a `120ms` colour/border transition and a 1px press offset on direct
-interaction only.
-
-- `prefers-reduced-motion: reduce` cuts every transition to ~0ms.
-- The transcript uses `scroll-behavior: auto` and is scrolled by assignment —
-  streamed tokens never trigger smooth scrolling.
-- Semantic `<button>`, `<form>`, `<nav>`, `<section>`; every control is
-  keyboard-operable and has a visible `:focus-visible` ring.
-- The transcript is `role="log" aria-live="polite"`; the status line is
-  `role="status"`, so connecting / ready / recording / thinking / speaking /
-  error states are announced.
-- The DOM charts carry `role="img"` with an `aria-label` listing the values.
-- All user and model text is inserted with `textContent`, never `innerHTML`.
+| Key | Sub-keys accessed |
+|---|---|
+| `money_in` | `family_support_amount`, `gig_income_amount`, `scholarship_stipend_amount`, `income_stability` |
+| `expenses` | `housing.amount`, `commute.amount`, `food_beyond_mess`, `split_shared_expenses`, `subscriptions`, `bnpl_usage.apps_used`, `bnpl_usage.typical_monthly_amount`, `bnpl_usage.missed_or_min_only`, `discretionary` |
+| `safety_net` | `personal_savings_amount`, `health_insurance_cover` |
+| `academic` | `year_of_study`, `expected_graduation_year` |
+| `debt` | array of `{ type, name, amount, outstanding, apr, interest_rate }` |
+| `credit` | `cards`, `total_limit`, `typical_utilization_pct` |
+| `goals` | array of `{ name, goal, target_amount, amount, saved_amount, current_amount, timeline, by }` |
+| `conversation_phase` | string label shown in the eyebrow badge |
 
 ---
 
-## 6. Checked before packaging
+## Design notes
 
-Served over `http://localhost` against the live FastAPI backend:
+- The dark charcoal/cyan palette is defined entirely as CSS custom properties in `styles.css` under `:root`. Change the tokens there to retheme every page at once.
+- Fonts are loaded from Google Fonts (Sora for headings, Manrope for body). Both declarations include system-font fallbacks (`ui-sans-serif, system-ui, 'Segoe UI', Roboto, Arial, sans-serif`) so the UI remains readable if the remote fonts are unavailable.
+- All visualisations (budget bars, spending columns, goal progress) are built with plain HTML `div` elements and CSS. No `<canvas>`, no third-party chart libraries.
+- No continuous animations, no canvas loops, no scroll-triggered effects. All transitions are direct-interaction only (hover/focus/active) and are suppressed for users who prefer reduced motion.
+- The screenshot referenced in the design brief was used as a structural composition reference only; it is not embedded in the website and is not required at runtime.
 
-- landing → advisor → dashboard navigation, with the session id carried through
-- session creation, streamed chat tokens, and the profile panel updating on `done`
-- `dashboard.html?session=<id>` rendering the profile-derived snapshot
-- `dashboard.html` with no `?session` and with an unknown id
-- desktop (1280px) and mobile (375px) layouts, no horizontal page scroll
-- browser console clean — no errors or warnings
+---
+
+## Validation checklist
+
+Before deploying, verify locally against the running FastAPI backend:
+
+- [ ] Session creation (`POST /api/sessions`) succeeds and the URL updates with `?session=<id>`
+- [ ] Streamed text chat delivers tokens word-by-word and the profile panel updates on `done`
+- [ ] Profile loading (`GET /api/sessions/{id}/profile`) populates the dashboard
+- [ ] Voice upload sends a multipart `audio` field, transcription appears, TTS audio plays
+- [ ] Navigating index → app → dashboard → app carries the session ID throughout
+- [ ] Session continuation: close and reopen `app.html?session=<id>`, see "Welcome back"
+- [ ] Desktop and narrow mobile: all cards centre-aligned, no horizontal overflow
+- [ ] Dark palette passes WCAG AA contrast for body text on card backgrounds
+- [ ] User (cyan) and assistant (dark surface) chat bubbles remain visually distinct
+- [ ] No console errors, no canvas loops, no network requests after the page is idle
