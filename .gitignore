@@ -37,6 +37,10 @@ youtube_videos.txt
 .idea/
 *.swp
 
+# tiny_llm training artifacts (regenerate locally, don't commit)
+tiny_llm/*.log
+tiny_llm/checkpoint*.pkl
+
 # OS
 .DS_Store
 Thumbs.db
